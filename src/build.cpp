@@ -6,7 +6,6 @@
 #include "utils/Config.h"
 #include "utils/metrics.hpp"
 #include "index/index.h"
-#include "index/katka.h"
 
 #include <boost/program_options.hpp>
 
@@ -24,13 +23,8 @@ int handle_parameters(int argc, char **argv)
         ("help-verbose", "display verbose help message")
         ("version,v", "display version info")
         ("silent,s", "silent mode")
-        // ("kernel,l", "create string kernel")
-        // ("digest,g", "create minimizer digest")
         ("rebuild,c", "rebuild indexes even they already exist")
-        ("repetition,r", po::value<unsigned>(&cfg.repetition), "number of repetition - for experiment needs")
-        // ("kmer_length,K", po::value<unsigned>(&cfg.K), "maximal read block size")
-        // ("window_size,w", po::value<unsigned>(&cfg.w), "window size")
-        // ("surrounding_size,M", po::value<unsigned>(&cfg.M), "")
+        // ("repetition,r", po::value<unsigned>(&cfg.repetition), "number of repetition - for experiment needs")
         ("basefolder,o", po::value<std::filesystem::path>(&cfg.output_path), "use <basefolder> as prefix for all index files. Default: current folder is the specified input_file_name")
         ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
@@ -42,14 +36,6 @@ int handle_parameters(int argc, char **argv)
     try
     {
         po::store(po::command_line_parser(argc, argv).options(desc).positional(posOptions).run(), vm);
-        // if (vm.count("digest"))
-        // {
-        //     cfg.digest = true;
-        // }
-        // if (vm.count("kernel"))
-        {
-            cfg.kernel = true;
-        }
         if (vm.count("silent"))
         {
             cfg.silent = true;
@@ -124,9 +110,6 @@ void run()
     time_baseline = get_time_usage();
 
     //  BUILD
-    // Katka kernel = Katka(cfg.w,cfg.M,cfg.K);
-    // kernel.build(cfg.input_path,cfg.kernel,cfg.digest);
-
     Index index = Index(cfg.rebuild); //  load or build index
     index.build(cfg.input_path);
 
