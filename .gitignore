@@ -1,0 +1,5 @@
+build/**
+src/tests/**
+travis/**
+test/artificial/basic/**
+tests/aa.*
