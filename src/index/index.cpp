@@ -120,7 +120,7 @@ int Index::build(std::filesystem::path text_file){
     return 0;
 }
 
-void Index::update_range(char c, size_t &length, Index::size_type &olb, Index::size_type &orb, Index::size_type &lb, Index::size_type &rb){
+int Index::update_range(char c, size_t &length, Index::size_type &olb, Index::size_type &orb, Index::size_type &lb, Index::size_type &rb){
     // std::cout << "current range "<<c<<'(' << olb  << '/'<< orb << ')' << "length: " << length-1<< std::endl;
     // std::cout << "number of " << c << " is " << fm_index.bwt.rank(olb,c) << std::endl;
     int previous_c = 0;
@@ -129,12 +129,13 @@ void Index::update_range(char c, size_t &length, Index::size_type &olb, Index::s
     int minrlcp;
 
     int number_of_c = fm_index.bwt.rank(olb,c);
+    if (number_of_c!=0)
     previous_c = fm_index.bwt.select(number_of_c,c); 
     next_c = fm_index.bwt.select(number_of_c+1,c);
 
     if (previous_c <= 0) //  previous_c doesnt exists
         // previous_c = 0;
-        minrlcp =  0;
+        minllcp =  0;
     else
         minllcp = rmq_lcp_min(previous_c,olb);
 
@@ -148,7 +149,7 @@ void Index::update_range(char c, size_t &length, Index::size_type &olb, Index::s
     // std::cout << "previous/olb "<<c<<'(' << previous_c  << '/'<< olb << ')' << "minlcp: " << minllcp<< std::endl;
     // std::cout << "orb/next "<<c<<'(' << orb  << '/'<< next_c << ')' << "minlcp: " << minrlcp<< std::endl;
 
-    // std::cout << lcp[minllcp] << ','  << lcp[minrlcp] << ','<<std::max(lcp[minllcp],lcp[minrlcp]) << std::endl;
+    std::cout << lcp[minllcp] << ','  << lcp[minrlcp] << ','<<std::max(lcp[minllcp],lcp[minrlcp]) << std::endl;
     int tmp;
     length = std::max(lcp[minllcp],lcp[minrlcp]);
 
@@ -157,7 +158,10 @@ void Index::update_range(char c, size_t &length, Index::size_type &olb, Index::s
         lb  = 0;
         rb = fm_index.size()-1;
         // std::cout << "New range setting: (" << lb  << ','<< rb << ')' << "lcp: " << length << std::endl;
-        return;
+        if (olb == lb && orb == rb){
+            return 1;
+        }
+        return 0 ;
     }
     
 
@@ -186,69 +190,47 @@ void Index::update_range(char c, size_t &length, Index::size_type &olb, Index::s
     }
     
     // std::cout << "New range setting: (" << lb  << ','<< rb << ')' << "lcp: " << length << std::endl;
+    if (olb == lb && orb == rb)
+    {
+        return 1;
+    }
+    return 0;
+    
 }
 
 int Index::locate(std::string pattern)
 {
-    std::cout << std::endl;
-    std::cout << "Location pattern: " << pattern << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "Locating pattern: " << pattern << std::endl;
     size_type lb = 0;
     size_type rb = fm_index.size()-1; 
     size_type olb,orb; 
     size_t length = 1;
-    for (size_t i = pattern.size() - 1; i >= 0 ; i--)
+    bool stop = false;
+    for (int i = pattern.size() - 1; i >= 0 ; i--)
     {
         olb = lb; orb = rb;
-
+        // std::cout << olb <<  "\t"<< orb <<"\t"<< i << std::endl;
         sdsl::backward_search(fm_index,olb,orb,pattern[i],lb,rb); 
         // std::cout << "subpttr: " <<  pattern.substr(i,length) << " was found on " << lb << ","<<rb << std::endl;
         if (lb > rb){
-            // length--;
-            // std::cout << "MEM has been found: " <<  pattern.substr(i+1,length-1) << " in genomes " << rankB(fm_index[rmq_sa_min(olb, orb)]) << ',' << rankB(fm_index[rmq_sa_max(olb, orb)]) << std::endl;
-            // std::cout << "MEM has been found: " <<  pattern.substr(i+1,length) << std::endl;
-            // std::cout << rankB(fm_index[rmq_sa_min(olb, orb)]) << ',' << rankB(fm_index[rmq_sa_max(olb, orb)]) << std::endl;
-            update_range(pattern[i],length,olb,orb,lb,rb);
-
-            occurences.emplace_back(++i,length,rankB(fm_index[rmq_sa_min(olb, orb)]),rankB(fm_index[rmq_sa_max(olb, orb)]));
+            // std::cout << "MEM2 has been found: " <<  pattern.substr(i+1,length-1) << " in genomes " << rankB(fm_index[rmq_sa_min(olb, orb)]) << ',' << rankB(fm_index[rmq_sa_max(olb, orb)]) << std::endl;
+            if(length > 1)
+                occurences.emplace_back(i+1,length-1,rankB(fm_index[rmq_sa_min(olb, orb)]),rankB(fm_index[rmq_sa_max(olb, orb)]));
+            // std::cout << i+1 <<'\t' << length-1 << '\t' <<rankB(fm_index[rmq_sa_min(olb, orb)]) << '\t' << rankB(fm_index[rmq_sa_max(olb, orb)]) << std::endl;
+            stop = update_range(pattern[i],length,olb,orb,lb,rb);
+            if (stop)
+                break;
+            i++;
         }
         if(i==0){
-            // std::cout << "MEM has been found: " <<  pattern.substr(i,length) << " in genomes " << rankB(fm_index[rmq_sa_min(lb, rb)]) << ',' << rankB(fm_index[rmq_sa_max(lb, rb)]) << std::endl;
-            occurences.emplace_back(i,length,rankB(fm_index[rmq_sa_min(lb, rb)]),rankB(fm_index[rmq_sa_max(lb, rb)]));
+            // std::cout << "MEM1 has been found: " <<  pattern.substr(i,length) << " in genomes " << rankB(fm_index[rmq_sa_min(lb, rb)]) << ',' << rankB(fm_index[rmq_sa_max(lb, rb)]) << std::endl;
+            if(length != 0)
+            // std::cout << i <<'\t' << length << '\t' <<rankB(fm_index[rmq_sa_min(lb, rb)]) << '\t' << rankB(fm_index[rmq_sa_max(lb, rb)]) << std::endl;
+                occurences.emplace_back(i,length,rankB(fm_index[rmq_sa_min(lb, rb)]),rankB(fm_index[rmq_sa_max(lb, rb)]));
             break;
         }
         length++;
     }
-    return 0;
-}
-
-void Index::print_MEMs(std::vector<mem_occ> occurences, std::string pattern){
-    for (size_t i = 0; i < occurences.size(); i++)
-    {
-        std::cout << "MEM of length "<< occurences[i].length << " has been found on index " <<  occurences[i].index << " , first occurence in genome number " << occurences[i].first_occ << ",last occurence in genome number " << occurences[i].last_occ << std::endl;
-    }
-
-}
-
-int Index::read_patterns(std::filesystem::path file_path, std::vector<std::string> &patterns)
-{
-    std::cout << "reading pattern file" << std::endl;
-
-    std::ifstream in(file_path);
-    unsigned number_of_patterns = 0;
-
-    if (!in.is_open()) {
-        std::cerr << "Error opening file: " << file_path << std::endl;
-        return 1; // Return an error code
-    }
-
-    std::string line;
-    while (std::getline(in, line)) {
-        patterns.push_back(line);
-        number_of_patterns++;
-        std::cout << "Read line: " << line << std::endl;
-    }
-
-    in.close();
-
     return 0;
 }

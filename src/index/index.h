@@ -40,7 +40,7 @@ private:
 
 public:
     typedef fm_index_type::size_type size_type;
-    void update_range(char c,size_t &length, size_type &olb, size_type &orb, size_type &lb, size_type &rb);
+    int update_range(char c,size_t &length, size_type &olb, size_type &orb, size_type &lb, size_type &rb);
 
     Indexcfg config;
     size_t text_size;
@@ -55,14 +55,12 @@ public:
     double index_size;
     std::vector<mem_occ> occurences;
 
-
     Index();
     Index(bool rebuild);
     ~Index();
 
-    void print_MEMs(std::vector<mem_occ> occurences, std::string pattern);
+    // void print_MEMs(std::vector<mem_occ> occurences);
     int build(std::filesystem::path text_file); //  construct fm index supporting mem searching and rmq structure over SA
     int locate(std::string pattern);            //  locate all MeMs
-    int read_patterns(std::filesystem::path file_path, std::vector<std::string> &patterns);
 };
 #endif //  INDEX_H

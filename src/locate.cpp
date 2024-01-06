@@ -26,8 +26,8 @@ int handle_parameters(int argc, char **argv)
         ("clean,c", "rebuild indexes even they exists")
         // ("repetition,r", po::value<unsigned>(&cfg.repetition), "number of repetition - for experiment needs")
         ("pattern,p", po::value<std::string>(&cfg.pattern), "print occurences of every pattern")
-        ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file")
-        ("pattern-file,P", po::value<std::filesystem::path>(&cfg.pattern_file)->required(), "input pattern file path (positional arg 2)");
+        ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path)->required(), "input file")
+        ("pattern-file,P", po::value<std::filesystem::path>(&cfg.pattern_file), "input pattern file path (positional arg 2)");
 
     po::positional_options_description posOptions;
     posOptions.add("input-file", 1);
@@ -92,7 +92,42 @@ int handle_parameters(int argc, char **argv)
     return 0;
 }
 
+int read_patterns(std::filesystem::path file_path, std::vector<std::string> &patterns)
+{
+    std::cout << "reading pattern file" << std::endl;
+
+    std::ifstream in(file_path);
+    unsigned number_of_patterns = 0;
+
+    if (!in.is_open()) {
+        std::cerr << "Error opening file: " << file_path << std::endl;
+        return 1; // Return an error code
+    }
+
+    std::string line;
+    while (std::getline(in, line)) {
+        patterns.push_back(line);
+        number_of_patterns++;
+        std::cout << "Read line: " << line << std::endl;
+    }
+
+    in.close();
+
+    return 0;
+}
+
+template <typename T>
+void print_MEMs(std::vector<T> occurences,std::string pattern){
+    for (size_t i = 0; i < occurences.size(); i++)
+    {
+        std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ << std::endl;
+    }
+}
+
 void run(filesystem::path index_path){
+
+    double time_baseline;
+    long mem_baseline;
 
     //  Load index
     Index index = Index();
@@ -100,15 +135,25 @@ void run(filesystem::path index_path){
 
     //  Load patterns
     vector<string> patterns;
-    index.read_patterns(cfg.pattern_file,patterns);
+
+    if(!cfg.pattern_file.empty())
+        read_patterns(cfg.pattern_file,patterns);
     if(!cfg.pattern.empty())
         patterns.push_back(cfg.pattern);
 
     //  locate patterns
     for (size_t i = 0; i < patterns.size(); i++)
     {   
+        // mem_baseline = get_mem_usage();
+        time_baseline = get_time_usage();
+
         index.locate(patterns[i]);
-        index.print_MEMs(index.occurences,patterns[i]);
+
+        time_baseline = get_time_usage() - time_baseline;
+        mem_baseline = get_mem_usage();
+
+        std::cout << '>' <<patterns[i] << '\t' << time_baseline << '\t' << mem_baseline << '\t' << index.occurences.size()<<std::endl;
+        print_MEMs(index.occurences,patterns[i]);
         index.occurences.clear();
     }
 }

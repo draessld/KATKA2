@@ -118,7 +118,7 @@ int string_kernel(std::string &text, char c, unsigned k)
         if (lcp[i + 1] < k)
         {
             flag = true;
-            for (int j = min; j < (min + k) && j < n; j++)
+            for (int j = min; j < (int)(min + k) && j < n; j++)
             {
                 if (text[j] == '$' || text[j] == '#')
                     flag = false;
@@ -126,10 +126,10 @@ int string_kernel(std::string &text, char c, unsigned k)
 
             if (flag)
             {
-                for (int j = min; j < min + k && j < n; j++)
+                for (int j = min; j < (int)(min + k) && j < n; j++)
                     B[j] = 1;
 
-                for (int j = max; j < max + k && j < n; j++)
+                for (int j = max; j < (int)(max + k) && j < n; j++)
                     B[j] = 1;
             }
 
