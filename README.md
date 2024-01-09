@@ -1,10 +1,10 @@
-# BIO-FMI
+# MEM finding tool for metagenomic classification
 From the paper: TBA
 
 ##  Brief description
 
 Software for finding the **leftmost** and the **rightmost** positions of every MEM of the pattern. 
-Implementation takes **input** in .fa / .fasta format or simple string/concatenation strings with $ as a divider.
+Implementation takes **input** in .fa / .fasta format or simple string/concatenation on strings divided with $.
 ```
 >genome1
 GATTACAT
@@ -30,7 +30,6 @@ MEM2    index_in_pattern       ...
 ...
 ```
 
-
 ##  Download
 
 To clone the repository, use following option:
@@ -53,7 +52,7 @@ After compiling, run
 $   index-build ../src/tests/test.fa
 ```
 
-input should be in format either *fasta* or concatenation of genomes like *$GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA*.
+input should be in format either *fasta* or *txt*.
 This command will create the required data structures (FMindex,RMQs,LCPs) of the text file "input.fa" and store them using filename as prefix. Use option -o to specify a different output folder for the index files.
 
 patterns_files should contains every pattern on a new line. For searching single pattern can be used option -p\<pattern\>.

@@ -137,8 +137,6 @@ void print_MEMs(std::vector<T> occurences,std::string pattern){
 
 void run(filesystem::path index_path){
 
-    double time_baseline;
-
     //  Load index
     Index index = Index(cfg.output_path);
     index.build(index_path);
@@ -154,13 +152,7 @@ void run(filesystem::path index_path){
     //  locate patterns
     for (size_t i = 0; i < patterns.size(); i++)
     {   
-        time_baseline = get_time_usage();
-
-        index.locate(patterns[i]);
-
-        time_baseline = get_time_usage() - time_baseline;
-
-        std::cout << '>' <<patterns[i] << '\t' << time_baseline << '\t' << index.occurences.size()<<std::endl;
+        std::cout << '>' <<patterns[i] << '\t' << index.locate(patterns[i]) << "ms"<< '\t' << index.occurences.size()<<std::endl;
         print_MEMs(index.occurences,patterns[i]);
         index.occurences.clear();
     }
@@ -181,7 +173,7 @@ int main(int argc, char **argv){
         return EXIT_SUCCESS;
     }
     
-    run(cfg.input_path); //  create classic FM-index and RMQ over SA usign sdsl library
+    run(cfg.input_path);
     
     return 0;
 }

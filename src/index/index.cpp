@@ -10,9 +10,11 @@ Index::Index(bool rebuild,std::filesystem::path output_path)  : rebuild(rebuild)
 
 Index::~Index() {}
 
-int Index::build(std::filesystem::path text_file){
+double Index::build(std::filesystem::path text_file){
     std::cout << "-=-=-=-=-=-   Building index   ...   " << std::endl;
 
+    auto base = std::chrono::high_resolution_clock::now();
+    auto startTime = base;
 
     //TODO  replace BWT/SA/LCP for bigBWT implementation on https://gitlab.com/manzai/Big-BWT/
 
@@ -25,11 +27,13 @@ int Index::build(std::filesystem::path text_file){
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No index " << config.out_path.filename() << " located. Building index now." << std::endl;
+        std::cout << "No index " << config.out_path.filename() << " located. Building now ...   ";
         sdsl::construct(fm_index, text_file, 1);
         sdsl::store_to_file(fm_index, config.out_path);
-        std::cout << " ==> DONE " << std::endl;
+        std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um"<< std::endl;
     }
+
+    startTime = std::chrono::high_resolution_clock::now();
 
     text_size = fm_index.size();
 
@@ -45,8 +49,9 @@ int Index::build(std::filesystem::path text_file){
         std::cout << "No LCP " << config.out_path.filename() << " located. Building LCP now." << std::endl;
         sdsl::construct(lcp, text_file, 1);
         sdsl::store_to_file(lcp, config.out_path);
-        std::cout << " ==> DONE " << std::endl;
+        std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um"<< std::endl;
     }
+    startTime = std::chrono::high_resolution_clock::now();
 
     //  build RMaxQ SA support
     config.out_path.replace_extension(config.rmq_sa_suffix_max);
@@ -57,12 +62,13 @@ int Index::build(std::filesystem::path text_file){
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No RMQ for SA" << text_file.filename() << " located. Building now." << std::endl;
+        std::cout << "No RMQ for SA" << text_file.filename() << " located. Building now ... ";
         sdsl::construct(tmp_csa, text_file, 1);
         sdsl::util::assign(rmq_sa_max, sdsl::rmq_succinct_sct<false>(&tmp_csa));
         sdsl::store_to_file(rmq_sa_max, config.out_path);
-        std::cout << " ==> DONE " << std::endl;
+        std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um"<< std::endl;
     }
+    startTime = std::chrono::high_resolution_clock::now();
     
     //  build RMinQ SA support
     config.out_path.replace_extension(config.rmq_sa_suffix_min);
@@ -73,12 +79,13 @@ int Index::build(std::filesystem::path text_file){
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No RMQ for SA" << text_file.filename() << " located. Building now." << std::endl;
+        std::cout << "No RMQ for SA" << text_file.filename() << " located. Building now ... ";
         sdsl::construct(tmp_csa, text_file, 1);
         sdsl::util::assign(rmq_sa_min, sdsl::rmq_succinct_sct<true>(&tmp_csa));
         sdsl::store_to_file(rmq_sa_min, config.out_path);
-        std::cout << " ==> DONE " << std::endl;
+        std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um"<< std::endl;
     }
+    startTime = std::chrono::high_resolution_clock::now();
 
     //  build RMinQ LCP support
     config.out_path.replace_extension(config.rmq_lcp_suffix_min);
@@ -89,12 +96,13 @@ int Index::build(std::filesystem::path text_file){
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No RMQ for LCP " << text_file.filename() << " located. Building now." << std::endl;
+        std::cout << "No RMQ for LCP " << text_file.filename() << " located. Building now ...   ";
         sdsl::construct(tmp_lcp, text_file, 1);
         sdsl::util::assign(rmq_lcp_min, sdsl::rmq_succinct_sct<true>(&tmp_lcp));
         sdsl::store_to_file(rmq_lcp_min, config.out_path);
-        std::cout << " ==> DONE in " << std::endl;
+        std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um"<< std::endl;
     }
+    startTime = std::chrono::high_resolution_clock::now();
 
     //  build rank support for $ character
     config.out_path.replace_extension(config.rank_support_suffix);
@@ -105,7 +113,7 @@ int Index::build(std::filesystem::path text_file){
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No rank support " << text_file.filename() << " located. Building now." << std::endl;
+        std::cout << "No rank support " << text_file.filename() << " located. Building now ...  ";
         size_t i = 0;
         B.resize(text_size);
         char c;
@@ -116,13 +124,13 @@ int Index::build(std::filesystem::path text_file){
             else i++;
         }
         sdsl::store_to_file(B, config.out_path);
-        std::cout << " ==> DONE " << std::endl;
+        std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um"<< std::endl;
     }
     sdsl::util::assign(rankB, &B);
 
     double index_size = size_in_mega_bytes(fm_index) + size_in_mega_bytes(rmq_lcp_min)+ size_in_mega_bytes(rmq_sa_max)+ size_in_mega_bytes(rmq_sa_min)+ size_in_mega_bytes(lcp) + size_in_mega_bytes(rankB);
     std::cout << "-=-=-=-=-=-   Building index - DONE, size:  " << index_size << " MiB." << std::endl;
-    return 0;
+    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - base).count();
 }
 
 int Index::update_range(char c, size_t &length, Index::size_type &olb, Index::size_type &orb, Index::size_type &lb, Index::size_type &rb){
@@ -201,8 +209,9 @@ int Index::update_range(char c, size_t &length, Index::size_type &olb, Index::si
     
 }
 
-int Index::locate(std::string pattern)
+double Index::locate(std::string pattern)
 {
+    auto base = std::chrono::high_resolution_clock::now();
     // std::cout << std::endl;
     // std::cout << "Locating pattern: " << pattern << std::endl;
     size_type lb = 0;
@@ -237,5 +246,5 @@ int Index::locate(std::string pattern)
         }
         length++;
     }
-    return 0;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - base).count();
 }

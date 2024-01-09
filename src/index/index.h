@@ -2,8 +2,9 @@
 #define INDEX_H
 
 #include <bits/stdc++.h>
-
+#include <chrono>
 #include <algorithm>
+
 #include <sdsl/suffix_arrays.hpp>
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/lcp.hpp>
@@ -60,7 +61,7 @@ public:
     ~Index();
 
     // void print_MEMs(std::vector<mem_occ> occurences);
-    int build(std::filesystem::path text_file); //  construct fm index supporting mem searching and rmq structure over SA
-    int locate(std::string pattern);            //  locate all MeMs
+    double build(std::filesystem::path text_file); //  construct fm index supporting mem searching and rmq structure over SA
+    double locate(std::string pattern);            //  locate all MeMs
 };
 #endif //  INDEX_H

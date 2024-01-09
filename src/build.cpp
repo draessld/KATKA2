@@ -105,6 +105,11 @@ int handle_parameters(int argc, char **argv)
 }
 
 std::string fastaToConcatenatedFile(std::filesystem::path& fastaFile) {
+    //  check if txt does not exists
+    if (std::filesystem::exists(fastaFile.replace_extension(".txt")) && std::filesystem::is_regular_file(fastaFile.replace_extension(".txt")))
+        std::cout << fastaFile.replace_extension(".txt") << " has been already created and found on the required location" << std::endl;
+        return fastaFile.replace_extension(".txt");
+
     std::ifstream inputFasta(fastaFile);
     std::string line;
     std::string concatenatedSequence;
@@ -130,22 +135,16 @@ std::string fastaToConcatenatedFile(std::filesystem::path& fastaFile) {
 void run()
 {
     // Measurements
-    double time_baseline;
-    std::vector<double> times;
-
-    time_baseline = get_time_usage();
 
     //  BUILD
-    if(cfg.input_path.extension() == ".fa" || cfg.input_path.extension() == ".fa"){ // TODO - better recognition or an argument setup
+    if(cfg.input_path.extension() == ".fa" || cfg.input_path.extension() == ".fasta"){ // TODO - better recognition or an argument setup
         std::cout << "fasta to string" << std::endl;
         cfg.input_path = fastaToConcatenatedFile(cfg.input_path);
     }
     Index index = Index(cfg.rebuild,cfg.output_path); //  load or build index
-    index.build(cfg.input_path);
+    double build_time = index.build(cfg.input_path);
 
-    time_baseline = get_time_usage() - time_baseline;
-
-    std::cout << "Build time: " << time_baseline << std::endl;
+    std::cout << "Build time: " << build_time << "s" << std::endl;
 }
 
 int main(int argc, char **argv)
