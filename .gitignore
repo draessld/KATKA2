@@ -1,6 +1,4 @@
 build/**
-src/tests/**
-travis/**
-test/artificial/basic/**
-tests/aa.*
+src/tests/test/**
+src/tests/yeast/**
 include/**

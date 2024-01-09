@@ -4,7 +4,6 @@
 
 #include "utils/Informations_signs.h"
 #include "utils/Config.h"
-#include "utils/metrics.hpp"
 #include "index/index.h"
 
 #include <boost/program_options.hpp>
