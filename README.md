@@ -22,10 +22,10 @@ GATTAGATA
 $GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA
 ```
 
-and gives output like
+and gives **output** like
 ```
 >pattern  time_in_us    #Mems
-MEM1     index_in_pattern       length       leftmost_genome       rightmost_genome
+MEM1     index_in_pattern       length       leftmost_genome_index       rightmost_genome_index
 MEM2    index_in_pattern       ...
 ...
 ```
