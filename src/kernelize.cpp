@@ -70,7 +70,7 @@ int handle_parameters(int argc, char **argv)
         if (vm.count("basefolder") == 0)
         {
             std::ostringstream oss;
-            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/k" << cfg.k << cfg.input_path.filename().replace_extension(cfg.suffix).c_str();
+            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/"<< cfg.input_path.filename().replace_extension("").c_str() << ".k" << cfg.k << cfg.suffix;
             cfg.output_path = oss.str();
             if (!std::filesystem::exists(cfg.output_path.parent_path()))
             {

@@ -23,7 +23,7 @@ int handle_parameters(int argc, char **argv)
         ("help-verbose", "display verbose help message")
         ("version,v", "display version info")
         ("silent,s", "silent mode")
-        ("rebuild,c", "rebuild indexes even they already exist")
+        ("rebuild,c", "rebuild data structures even they already exist")
         // ("repetition,r", po::value<unsigned>(&cfg.repetition), "number of repetition - for experiment needs")
         ("basefolder,o", po::value<std::filesystem::path>(&cfg.output_path), "use <basefolder> as prefix for all index files. Default: current folder is the specified input_file_name")
         ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
@@ -80,9 +80,15 @@ int handle_parameters(int argc, char **argv)
         }
         po::notify(vm);
 
-        if (vm.count("basename") == 0)
-        {   
-            cfg.output_path = cfg.input_path;
+        if (vm.count("basefolder") == 0)
+        {
+            std::ostringstream oss;
+            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/" << cfg.input_path.filename().c_str();
+            cfg.output_path = oss.str();
+            if (!std::filesystem::exists(cfg.output_path.parent_path()))
+            {
+                std::filesystem::create_directories(cfg.output_path.parent_path());
+            }
         }
     }
     catch (const po::error &e)
@@ -98,31 +104,52 @@ int handle_parameters(int argc, char **argv)
     return 0;
 }
 
+std::string fastaToConcatenatedFile(std::filesystem::path& fastaFile) {
+    std::ifstream inputFasta(fastaFile);
+    std::string line;
+    std::string concatenatedSequence;
+
+    while (std::getline(inputFasta, line)) {
+        if (!line.empty() && line[0] != '>') {
+            concatenatedSequence += line;
+        }else
+        concatenatedSequence += '$';
+    }
+
+    // Generate a unique file name
+    std::string outputFileName = fastaFile.replace_extension(".txt");
+
+    // Save the concatenated sequence to the file
+    std::ofstream outputFile(outputFileName);
+    outputFile << concatenatedSequence;
+    outputFile.close();
+
+    return outputFileName;
+}
+
 void run()
 {
     // Measurements
     double time_baseline;
-    long mem_baseline;
     std::vector<double> times;
-    std::vector<long> mems;
 
-    mem_baseline = get_mem_usage();
     time_baseline = get_time_usage();
 
     //  BUILD
-    Index index = Index(cfg.rebuild); //  load or build index
+    if(cfg.input_path.extension() == ".fa" || cfg.input_path.extension() == ".fa"){ // TODO - better recognition or an argument setup
+        std::cout << "fasta to string" << std::endl;
+        cfg.input_path = fastaToConcatenatedFile(cfg.input_path);
+    }
+    Index index = Index(cfg.rebuild,cfg.output_path); //  load or build index
     index.build(cfg.input_path);
 
     time_baseline = get_time_usage() - time_baseline;
-    mem_baseline = get_mem_usage() - mem_baseline;
 
     std::cout << "Build time: " << time_baseline << std::endl;
-    std::cout << "Peak RAM usage: " << mem_baseline << " kB" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
-
     /*  Handle input parameters */
     int parameter_handle_result = handle_parameters(argc, argv);
     if (parameter_handle_result == -1)

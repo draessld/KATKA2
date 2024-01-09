@@ -12,6 +12,7 @@
 
 struct Indexcfg{
     bool rebuild = false;
+    std::filesystem::path out_path;
     std::string index_suffix = ".fmi";
     std::string lcp_suffix = ".lcp";
     std::string rmq_sa_suffix_min = ".rmqsamin";
@@ -29,7 +30,6 @@ struct mem_occ{
     mem_occ(int index,int length,int first_occ,int last_occ) :index(index), length(length), first_occ(first_occ),last_occ(last_occ){}
 };
 
-//  TODO - use PFP to build BWT ... https://gitlab.com/manzai/Big-BWT/
 class Index
 {
 private:
@@ -55,8 +55,8 @@ public:
     double index_size;
     std::vector<mem_occ> occurences;
 
-    Index();
-    Index(bool rebuild);
+    Index(std::filesystem::path output_path);
+    Index(bool rebuild,std::filesystem::path output_path);
     ~Index();
 
     // void print_MEMs(std::vector<mem_occ> occurences);

@@ -23,7 +23,7 @@ int handle_parameters(int argc, char **argv)
         ("help-verbose", "display verbose help message")
         ("version,v", "display version info")
         ("silent,s", "silent mode")
-        ("clean,c", "rebuild indexes even they exists")
+        ("rebuild,c", "rebuild data structures even they already exist")
         // ("repetition,r", po::value<unsigned>(&cfg.repetition), "number of repetition - for experiment needs")
         ("pattern,p", po::value<std::string>(&cfg.pattern), "print occurences of every pattern")
         ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path)->required(), "input file")
@@ -76,6 +76,17 @@ int handle_parameters(int argc, char **argv)
 
             return -1;
         }
+         if (vm.count("basefolder") == 0)
+        {
+            std::ostringstream oss;
+            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str()  << "/" << cfg.w << cfg.input_path.filename().c_str();
+            cfg.output_path = oss.str();
+            if (!std::filesystem::exists(cfg.output_path.parent_path()))
+            {
+                std::filesystem::create_directories(cfg.output_path.parent_path());
+            }
+        }
+
         po::notify(vm);
 
     }
@@ -127,10 +138,9 @@ void print_MEMs(std::vector<T> occurences,std::string pattern){
 void run(filesystem::path index_path){
 
     double time_baseline;
-    long mem_baseline;
 
     //  Load index
-    Index index = Index();
+    Index index = Index(cfg.output_path);
     index.build(index_path);
 
     //  Load patterns
@@ -144,15 +154,13 @@ void run(filesystem::path index_path){
     //  locate patterns
     for (size_t i = 0; i < patterns.size(); i++)
     {   
-        // mem_baseline = get_mem_usage();
         time_baseline = get_time_usage();
 
         index.locate(patterns[i]);
 
         time_baseline = get_time_usage() - time_baseline;
-        mem_baseline = get_mem_usage();
 
-        std::cout << '>' <<patterns[i] << '\t' << time_baseline << '\t' << mem_baseline << '\t' << index.occurences.size()<<std::endl;
+        std::cout << '>' <<patterns[i] << '\t' << time_baseline << '\t' << index.occurences.size()<<std::endl;
         print_MEMs(index.occurences,patterns[i]);
         index.occurences.clear();
     }
