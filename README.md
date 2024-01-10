@@ -1,5 +1,4 @@
 # MEM finding tool for metagenomic classification
-From the paper: TBA
 
 ##  Brief description
 
