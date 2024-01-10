@@ -26,7 +26,13 @@ int handle_parameters(int argc, char **argv)
 {
     po::options_description desc("Allowed options");
 
-    desc.add_options()("help", "produce help message")("help-verbose", "display verbose help message")("printable,p", "unhashed")("silent,s", "silent mode")("window_size,w", po::value<uint32_t>(&cfg.w), "lookahead window size")("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
+    desc.add_options()("help", "produce help message")
+    // ("help-verbose", "display verbose help message")
+    ("printable,p", "to see hashed values")
+    // ("silent,s", "silent mode")
+    ("window_size,w", po::value<uint32_t>(&cfg.w), "lookahead window size")
+    // ("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")
+    ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
     posOptions.add("input-file", 1);
@@ -48,10 +54,10 @@ int handle_parameters(int argc, char **argv)
         {
             cfg.printable = true;
         }
-        if (vm.count("silent"))
-        {
-            cfg.silent = true;
-        }
+        // if (vm.count("silent"))
+        // {
+        //     cfg.silent = true;
+        // }
         if (vm.count("help-verbose"))
         {
             std::cout << desc << std::endl;
@@ -69,17 +75,6 @@ int handle_parameters(int argc, char **argv)
             return -1;
         }
         po::notify(vm);
-
-        if (vm.count("basefolder") == 0)
-        {
-            std::ostringstream oss;
-            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/"<< cfg.input_path.filename().replace_extension("").c_str() << ".w" << cfg.w << cfg.suffix;
-            cfg.output_path = oss.str();
-            if (!std::filesystem::exists(cfg.output_path.parent_path()))
-            {
-                std::filesystem::create_directories(cfg.output_path.parent_path());
-            }
-        }
     }
     catch (const po::error &e)
     {
@@ -238,19 +233,19 @@ int main(int argc, char **argv)
     in.close();
 
     minimizer_digest(digest, cfg.w);
-    if (!cfg.silent)
-        std::cout << digest << std::endl;
+    // if (!cfg.silent)
+    std::cout << digest << std::endl;
 
-    std::ofstream out(cfg.output_path, std::ios::binary);
+    // std::ofstream out(cfg.output_path, std::ios::binary);
 
-    if (!out.is_open())
-    {
-        std::cout << "ERROR: File " << cfg.output_path << " cannot be openned. Exit." << std::endl;
-        return 1;
-    }
+    // if (!out.is_open())
+    // {
+    //     std::cout << "ERROR: File " << cfg.output_path << " cannot be openned. Exit." << std::endl;
+    //     return 1;
+    // }
 
-    out << digest;
-    out.close();
+    // out << digest;
+    // out.close();
 
     return 0;
 }

@@ -30,12 +30,12 @@ int handle_parameters(int argc, char **argv)
     po::options_description desc("Allowed options");
 
     desc.add_options()("help", "produce help message")
-    ("help-verbose", "display verbose help message")
-    ("silent,s", "silent mode")
+    // ("help-verbose", "display verbose help message")
+    // ("silent,s", "silent mode")
     ("to_publication,p", "printed with '-' except deleting positions")
     ("kmer_length,k", po::value<uint32_t>(&cfg.k), "kmer, default 0")
-    ("divider,c", po::value<char>(&cfg.c), "divide too long gaps, default #")
-    ("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")
+    ("divider,c", po::value<char>(&cfg.c), "instead of gaps keep $ or insert this divider, default #")
+    // ("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")
     ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
@@ -62,10 +62,10 @@ int handle_parameters(int argc, char **argv)
 
             return 1;
         }
-        if (vm.count("silent"))
-        {
-            cfg.silent = true;
-        }
+        // if (vm.count("silent"))
+        // {
+        //     cfg.silent = true;
+        // }
         if (vm.count("to_publication"))
         {
             cfg.to_publication = true;
@@ -80,16 +80,16 @@ int handle_parameters(int argc, char **argv)
         }
         po::notify(vm);
 
-        if (vm.count("basefolder") == 0)
-        {
-            std::ostringstream oss;
-            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/"<< cfg.input_path.filename().replace_extension("").c_str() << ".k" << cfg.k << cfg.suffix;
-            cfg.output_path = oss.str();
-            if (!std::filesystem::exists(cfg.output_path.parent_path()))
-            {
-                std::filesystem::create_directories(cfg.output_path.parent_path());
-            }
-        }
+        // if (vm.count("basefolder") == 0)
+        // {
+        //     std::ostringstream oss;
+        //     oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/"<< cfg.input_path.filename().replace_extension("").c_str() << ".k" << cfg.k << cfg.suffix;
+        //     cfg.output_path = oss.str();
+        //     if (!std::filesystem::exists(cfg.output_path.parent_path()))
+        //     {
+        //         std::filesystem::create_directories(cfg.output_path.parent_path());
+        //     }
+        // }
     }
     catch (const po::error &e)
     {
@@ -116,7 +116,7 @@ int string_kernel(std::string &text, unsigned k)
     sdsl::bit_vector B(n, 0);
 
     uint32_t min = n;
-    int max = 0;
+    int max = -1;
     bool flag;
 
     for (int i = n - 1; i >= 0; i--)
@@ -227,19 +227,19 @@ int main(int argc, char **argv)
     in.close();
 
     string_kernel(kernel, cfg.k);
-    if (!cfg.silent)
+    // if (!cfg.silent)
         std::cout << kernel << std::endl;
 
-    std::ofstream out(cfg.output_path, std::ios::binary);
+    // std::ofstream out(cfg.output_path, std::ios::binary);
 
-    if (!out.is_open())
-    {
-        std::cout << "ERROR: File " << cfg.output_path << " cannot be openned. Exit." << std::endl;
-        return 1;
-    }
+    // if (!out.is_open())
+    // {
+    //     std::cout << "ERROR: File " << cfg.output_path << " cannot be openned. Exit." << std::endl;
+    //     return 1;
+    // }
 
-    out << kernel;
-    out.close();
+    // out << kernel;
+    // out.close();
 
     return 0;
 }

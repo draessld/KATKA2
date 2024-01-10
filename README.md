@@ -23,7 +23,7 @@ $GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA
 
 and gives **output** like
 ```
->pattern  time_in_us    #Mems
+>pattern  time_in_ms    #Mems
 MEM1     index_in_pattern       length       leftmost_genome_index       rightmost_genome_index
 MEM2    index_in_pattern       ...
 ...
@@ -57,8 +57,8 @@ This command will create the required data structures (FMindex,RMQs,LCPs) of the
 patterns_files should contains every pattern on a new line. For searching single pattern can be used option -p\<pattern\>.
 Run
 ```
-$   index-locate ../src/tests/test.fa -P../src/tests/test.patterns 
-$   index-locate ../src/tests/test.fa -pACATA
+$   index-locate ../src/tests/test/test -P../src/tests/test.patterns 
+$   index-locate ../src/tests/test/test -pACATA
 ```
 
 ##  Additional scripts

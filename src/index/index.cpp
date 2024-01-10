@@ -219,6 +219,9 @@ double Index::locate(std::string pattern)
     size_type rb = fm_index.size() - 1;
     size_type olb, orb;
 
+    std::cout << B << std::endl;
+    std::cout << rankB(15) << std::endl;
+
     size_t length = 1;
     bool stop = false;
 
