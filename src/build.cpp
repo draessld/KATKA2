@@ -23,7 +23,6 @@ int handle_parameters(int argc, char **argv)
         ("version,v", "display version info")
         ("silent,s", "silent mode")
         ("rebuild,c", "rebuild data structures even they already exist")
-        // ("repetition,r", po::value<unsigned>(&cfg.repetition), "number of repetition - for experiment needs")
         ("basefolder,o", po::value<std::filesystem::path>(&cfg.output_path), "use <basefolder> as prefix for all index files. Default: current folder is the specified input_file_name")
         ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
@@ -82,12 +81,13 @@ int handle_parameters(int argc, char **argv)
         if (vm.count("basefolder") == 0)
         {
             std::ostringstream oss;
-            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/" << cfg.input_path.filename().c_str();
+            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str();
             cfg.output_path = oss.str();
             if (!std::filesystem::exists(cfg.output_path.parent_path()))
             {
                 std::filesystem::create_directories(cfg.output_path.parent_path());
             }
+            std::cout << "Index folder: " << cfg.output_path << std::endl;
         }
     }
     catch (const po::error &e)
@@ -105,19 +105,22 @@ int handle_parameters(int argc, char **argv)
 
 std::string fastaToConcatenatedFile(std::filesystem::path& fastaFile) {
     //  check if txt does not exists
-    if (std::filesystem::exists(fastaFile.replace_extension(".txt")) && std::filesystem::is_regular_file(fastaFile.replace_extension(".txt")))
-        std::cout << fastaFile.replace_extension(".txt") << " has been already created and found on the required location" << std::endl;
-        return fastaFile.replace_extension(".txt");
+    std::string ext = fastaFile.extension();
+    if (std::filesystem::exists(fastaFile.replace_extension(".txt"))){
+        std::cout << fastaFile << " has been already created and found on the required location" << std::endl;
+        return fastaFile;
+    }
+    fastaFile.replace_extension(ext);
 
     std::ifstream inputFasta(fastaFile);
     std::string line;
     std::string concatenatedSequence;
 
-    while (std::getline(inputFasta, line)) {
-        if (!line.empty() && line[0] != '>') {
+while (std::getline(inputFasta, line)) {
+        if (line[0] != '>')
             concatenatedSequence += line;
-        }else
-        concatenatedSequence += '$';
+        if (line[0] == '>' && !concatenatedSequence.empty())
+            concatenatedSequence += '$';            
     }
 
     // Generate a unique file name

@@ -37,7 +37,7 @@ To clone the repository, use following option:
 $   git clone https://github.com/draessld/MEMmc
 ```
 ##  Compile
-You need the SDSL library installed on your system (https://github.com/simongog/sdsl-lite).
+You need the SDSL library installed on your system (https://github.com/xxsds/sdsl-lite).
 
 Project uses cmake to generate the Makefile. Create a build folder in the main folder:
 ```

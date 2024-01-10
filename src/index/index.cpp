@@ -149,7 +149,7 @@ int Index::update_range(char c, size_t &length, Index::size_type &olb, Index::si
     int next_c = fm_index.size() - 1;
 
     if (number_of_c != 0)
-        previous_c = fm_index.bwt.select(number_of_c, c);
+        fm_index.bwt.select(number_of_c, c);
     next_c = fm_index.bwt.select(number_of_c + 1, c);
 
     if (previous_c <= 0) //  previous_c doesnt exists
