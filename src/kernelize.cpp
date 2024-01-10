@@ -16,6 +16,8 @@ typedef struct Config
 {
     uint32_t k;
     bool silent = false;
+    bool to_publication = false; // printed with '-' except deleting positions
+    char c = '#';
     std::filesystem::path output_path;
     std::filesystem::path input_path;
     std::string suffix = ".krl";
@@ -27,7 +29,14 @@ int handle_parameters(int argc, char **argv)
 {
     po::options_description desc("Allowed options");
 
-    desc.add_options()("help", "produce help message")("help-verbose", "display verbose help message")("silent,s", "silent mode")("kmer_length,k", po::value<uint32_t>(&cfg.k), "kmer")("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
+    desc.add_options()("help", "produce help message")
+    ("help-verbose", "display verbose help message")
+    ("silent,s", "silent mode")
+    ("to_publication,p", "printed with '-' except deleting positions")
+    ("kmer_length,k", po::value<uint32_t>(&cfg.k), "kmer, default 0")
+    ("divider,c", po::value<char>(&cfg.c), "divide too long gaps, default #")
+    ("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")
+    ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
     posOptions.add("input-file", 1);
@@ -56,6 +65,10 @@ int handle_parameters(int argc, char **argv)
         if (vm.count("silent"))
         {
             cfg.silent = true;
+        }
+        if (vm.count("to_publication"))
+        {
+            cfg.to_publication = true;
         }
         if (vm.count("input-file") == 0)
         {
@@ -91,10 +104,9 @@ int handle_parameters(int argc, char **argv)
     return 0;
 }
 
-int string_kernel(std::string &text, char c, unsigned k)
+int string_kernel(std::string &text, unsigned k)
 {
     // create SA, LCP and B
-
     sdsl::csa_bitcompressed<> sa;
     sdsl::lcp_bitcompressed<> lcp;
     sdsl::construct_im(sa, text, 1);
@@ -138,51 +150,45 @@ int string_kernel(std::string &text, char c, unsigned k)
         }
     }
 
-    for (size_t i = 0; i < B.size(); i++)
-{
-        if (B[i] || text[i] == '$'){
-        }else{
-            text[i] = '-';
+
+    if (cfg.to_publication)
+    {
+        for (size_t i = 0; i < B.size(); i++)
+        {
+            if (!B[i] && text[i] != '$'){
+                text[i] = '-';
+            }
+
         }
-
-}
-
-    // dolar = false;
-    // hash = false;
-    // size_t j = 0;
-    // for (size_t i = 0; i < B.size(); i++)
-    // {
-    //     std::cout << text << std::endl;
-
-    //     if (B[i] || text[j] == '$')
-    //     {
-    //         if (text[j] == '$')
-    //         {
-    //             if (flag)
-    //             {
-    //                 // text.erase(--j, 1);
-    //             }
-    //             flag = true;
-    //         }
-    //         else
-    //             flag = false;
-    //         j++;
-    //     }
-    //     else
-    //     {
-    //         if (!flag)
-    //         {
-    //             text[j++] = c;
-    //             flag = true;
-    //         }
-    //         else
-    //         {
-    //             text.erase(j, 1);
-    //         }
-    //     }
-    // }
-
-    // std::cout << B << std::endl;
+    }else{
+        bool dolar = false;
+        bool divider = false;
+        size_t j = 0;
+        for (size_t i = 0; i < B.size(); i++){
+            if (B[i] || text[j] == '$'){ // keep character in text
+                if (text[j] == '$')
+                {
+                    dolar = true;
+                    if(divider){
+                        //remove divider on previous position
+                        text.erase(--j, 1);
+                        divider = false;
+                    }
+                }else{
+                    dolar = false;
+                }
+                j++;
+            }else{
+                if (!divider && !dolar)
+                {
+                    text[j++] = cfg.c;
+                    divider = true;
+                }else{
+                    text.erase(j, 1);
+                }
+            }
+        }
+    }
 
     return 0;
 }
@@ -220,7 +226,7 @@ int main(int argc, char **argv)
 
     in.close();
 
-    string_kernel(kernel, '#', cfg.k);
+    string_kernel(kernel, cfg.k);
     if (!cfg.silent)
         std::cout << kernel << std::endl;
 
