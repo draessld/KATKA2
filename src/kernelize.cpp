@@ -138,50 +138,51 @@ int string_kernel(std::string &text, char c, unsigned k)
         }
     }
 
-//     for (size_t i = 0; i < B.size(); i++)
-// {
-//         if (B[i] || text[i] == '$'){
-//         }else{
-//             text[i] = '-';
-//         }
-
-// }
-
-    flag = false;
-    size_t j = 0;
     for (size_t i = 0; i < B.size(); i++)
-    {
-        std::cout << text << std::endl;
-
-        if (B[i] || text[j] == '$')
-        {
-            if (text[j] == '$')
-            {
-                if (flag)
-                {
-                    // text.erase(--j, 1);
-                }
-                flag = true;
-            }
-            else
-                flag = false;
-            j++;
+{
+        if (B[i] || text[i] == '$'){
+        }else{
+            text[i] = '-';
         }
-        else
-        {
-            if (!flag)
-            {
-                text[j++] = c;
-                flag = true;
-            }
-            else
-            {
-                text.erase(j, 1);
-            }
-        }
-    }
 
-    std::cout << B << std::endl;
+}
+
+    // dolar = false;
+    // hash = false;
+    // size_t j = 0;
+    // for (size_t i = 0; i < B.size(); i++)
+    // {
+    //     std::cout << text << std::endl;
+
+    //     if (B[i] || text[j] == '$')
+    //     {
+    //         if (text[j] == '$')
+    //         {
+    //             if (flag)
+    //             {
+    //                 // text.erase(--j, 1);
+    //             }
+    //             flag = true;
+    //         }
+    //         else
+    //             flag = false;
+    //         j++;
+    //     }
+    //     else
+    //     {
+    //         if (!flag)
+    //         {
+    //             text[j++] = c;
+    //             flag = true;
+    //         }
+    //         else
+    //         {
+    //             text.erase(j, 1);
+    //         }
+    //     }
+    // }
+
+    // std::cout << B << std::endl;
 
     return 0;
 }
