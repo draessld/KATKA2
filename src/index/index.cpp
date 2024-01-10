@@ -1,38 +1,41 @@
 #include "index.h"
 
-Index::Index(std::filesystem::path output_path)
+Index::Index(std::filesystem::path index_folder)
 {
-    config.out_path = output_path;
+    config.base_folder = index_folder;
 }
 
-Index::Index(bool rebuild, std::filesystem::path output_path) : rebuild(rebuild)
+Index::Index(bool rebuild, std::filesystem::path index_folder) : rebuild(rebuild)
 {
-    config.out_path = output_path;
+    config.base_folder = index_folder;
 }
 
 Index::~Index() {}
 
 double Index::build(std::filesystem::path text_file)
 {
+
+    config.base_folder.append(text_file.filename().replace_extension().c_str());
+    std::cout << config.base_folder << std::endl;
+
     std::cout << "-=-=-=-=-=-   Building index   ...   " << std::endl;
+
 
     auto base = std::chrono::high_resolution_clock::now();
     auto startTime = base;
-
     // TODO  replace BWT/SA/LCP for bigBWT implementation on https://gitlab.com/manzai/Big-BWT/
 
     //  Build SA & fm-index
-    config.out_path.replace_extension(config.index_suffix);
-    if (rebuild || !sdsl::load_from_file(fm_index, config.out_path))
+    if (rebuild || !sdsl::load_from_file(fm_index, config.base_folder.replace_extension(config.index_suffix)))
     {
         std::ifstream in(text_file);
         if (!in)
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No index " << config.out_path.filename() << " located. Building now ...   ";
+        std::cout << "No fmindex on " << config.base_folder.replace_extension(config.index_suffix) << " located. Building now ...   ";
         sdsl::construct(fm_index, text_file, 1);
-        sdsl::store_to_file(fm_index, config.out_path);
+        sdsl::store_to_file(fm_index, config.base_folder.replace_extension(config.index_suffix));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
 
@@ -41,82 +44,77 @@ double Index::build(std::filesystem::path text_file)
     text_size = fm_index.size();
 
     // Constructing the LCP array
-    config.out_path.replace_extension(config.lcp_suffix);
-    if (rebuild || !sdsl::load_from_file(lcp, config.out_path))
+    if (rebuild || !sdsl::load_from_file(lcp, config.base_folder.replace_extension(config.lcp_suffix)))
     {
         std::ifstream in(text_file);
         if (!in)
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No LCP " << config.out_path.filename() << " located. Building LCP now." << std::endl;
+        std::cout << "No LCP on" << config.base_folder.replace_extension(config.lcp_suffix) << " located. Building LCP now." << std::endl;
         sdsl::construct(lcp, text_file, 1);
-        sdsl::store_to_file(lcp, config.out_path);
+        sdsl::store_to_file(lcp, config.base_folder.replace_extension(config.lcp_suffix));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     startTime = std::chrono::high_resolution_clock::now();
 
     //  build RMaxQ SA support
-    config.out_path.replace_extension(config.rmq_sa_suffix_max);
-    if (rebuild || !sdsl::load_from_file(rmq_sa_max, config.out_path))
+    if (rebuild || !sdsl::load_from_file(rmq_sa_max, config.base_folder.replace_extension(config.rmq_sa_suffix_max)))
     {
         std::ifstream in(text_file);
         if (!in)
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No RMQ for SA" << text_file.filename() << " located. Building now ... ";
+        std::cout << "No RMQ for SA on " << config.base_folder.replace_extension(config.rmq_sa_suffix_max) << " located. Building now ... ";
         sdsl::construct(tmp_csa, text_file, 1);
         sdsl::util::assign(rmq_sa_max, sdsl::rmq_succinct_sct<false>(&tmp_csa));
-        sdsl::store_to_file(rmq_sa_max, config.out_path);
+        sdsl::store_to_file(rmq_sa_max, config.base_folder.replace_extension(config.rmq_sa_suffix_max));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     startTime = std::chrono::high_resolution_clock::now();
 
     //  build RMinQ SA support
-    config.out_path.replace_extension(config.rmq_sa_suffix_min);
-    if (rebuild || !sdsl::load_from_file(rmq_sa_min, config.out_path))
+    if (rebuild || !sdsl::load_from_file(rmq_sa_min, config.base_folder.replace_extension(config.rmq_sa_suffix_min)))
     {
         std::ifstream in(text_file);
         if (!in)
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No RMQ for SA" << text_file.filename() << " located. Building now ... ";
+        std::cout << "No RMQ for SA on " << config.base_folder.replace_extension(config.rmq_sa_suffix_min) << " located. Building now ... ";
         sdsl::construct(tmp_csa, text_file, 1);
         sdsl::util::assign(rmq_sa_min, sdsl::rmq_succinct_sct<true>(&tmp_csa));
-        sdsl::store_to_file(rmq_sa_min, config.out_path);
+        sdsl::store_to_file(rmq_sa_min, config.base_folder.replace_extension(config.rmq_sa_suffix_min));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     startTime = std::chrono::high_resolution_clock::now();
 
     //  build RMinQ LCP support
-    config.out_path.replace_extension(config.rmq_lcp_suffix_min);
-    if (rebuild || !sdsl::load_from_file(rmq_lcp_min, config.out_path))
+    if (rebuild || !sdsl::load_from_file(rmq_lcp_min, config.base_folder.replace_extension(config.rmq_lcp_suffix_min)))
     {
         std::ifstream in(text_file);
         if (!in)
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No RMQ for LCP " << text_file.filename() << " located. Building now ...   ";
+        std::cout << "No RMQ for LCP  on " << config.base_folder.replace_extension(config.rmq_lcp_suffix_min) << " located. Building now ...   ";
         sdsl::construct(tmp_lcp, text_file, 1);
         sdsl::util::assign(rmq_lcp_min, sdsl::rmq_succinct_sct<true>(&tmp_lcp));
-        sdsl::store_to_file(rmq_lcp_min, config.out_path);
+        sdsl::store_to_file(rmq_lcp_min, config.base_folder.replace_extension(config.rmq_lcp_suffix_min));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     startTime = std::chrono::high_resolution_clock::now();
 
     //  build rank support for $ character
-    config.out_path.replace_extension(config.rank_support_suffix);
-    if (rebuild || !sdsl::load_from_file(B, config.out_path))
+    if (rebuild || !sdsl::load_from_file(B, config.base_folder.replace_extension(config.rank_support_suffix)))
     {
         std::ifstream in(text_file);
         if (!in)
         {
             std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No rank support " << text_file.filename() << " located. Building now ...  ";
+        std::cout << "No rank support  on " << config.base_folder.replace_extension(config.rank_support_suffix) << " located. Building now ...  ";
         size_t i = 0;
         B.resize(text_size);
         char c;
@@ -128,7 +126,7 @@ double Index::build(std::filesystem::path text_file)
             else
                 i++;
         }
-        sdsl::store_to_file(B, config.out_path);
+        sdsl::store_to_file(B, config.base_folder.replace_extension(config.rank_support_suffix));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     sdsl::util::assign(rankB, &B);
@@ -219,8 +217,8 @@ double Index::locate(std::string pattern)
     size_type rb = fm_index.size() - 1;
     size_type olb, orb;
 
-    std::cout << B << std::endl;
-    std::cout << rankB(15) << std::endl;
+    // std::cout << B << std::endl;
+    // std::cout << rankB(15) << std::endl;
 
     size_t length = 1;
     bool stop = false;
@@ -232,7 +230,7 @@ double Index::locate(std::string pattern)
         sdsl::backward_search(fm_index, olb, orb, pattern[i], lb, rb);
         if (lb > rb)
         {
-            if (length > 1)                                                                                                               // do not write down zero-length MEMs
+            if (length > 1)                                                                                                               // do not stor zero-length MEMs
                 occurences.emplace_back(i + 1, length - 1, rankB(fm_index[rmq_sa_min(olb, orb)]), rankB(fm_index[rmq_sa_max(olb, orb)])); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
             // std::cout << i+1 <<'\t' << length-1 << '\t' <<rankB(fm_index[rmq_sa_min(olb, orb)]) << '\t' << rankB(fm_index[rmq_sa_max(olb, orb)]) << std::endl;
             stop = update_range(pattern[i], length, olb, orb, lb, rb); // get wider range with searched character
@@ -242,7 +240,7 @@ double Index::locate(std::string pattern)
         }
         if (i == 0)
         {
-            if (length != 0)                                                                                                  // do not write down zero-length MEMs
+            if (length != 0)                                                                                                  // do not store zero-length MEMs
                                                                                                                               // std::cout << i <<'\t' << length << '\t' <<rankB(fm_index[rmq_sa_min(lb, rb)]) << '\t' << rankB(fm_index[rmq_sa_max(lb, rb)]) << std::endl;
                 occurences.emplace_back(i, length, rankB(fm_index[rmq_sa_min(lb, rb)]), rankB(fm_index[rmq_sa_max(lb, rb)])); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
             break;

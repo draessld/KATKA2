@@ -80,14 +80,18 @@ int handle_parameters(int argc, char **argv)
 
         if (vm.count("basefolder") == 0)
         {
-            std::ostringstream oss;
-            oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str();
-            cfg.output_path = oss.str();
-            if (!std::filesystem::exists(cfg.output_path.parent_path()))
+            cfg.output_path = cfg.input_path.parent_path().append(cfg.input_path.filename().replace_extension("").c_str());
+            if (!std::filesystem::exists(cfg.output_path))
             {
-                std::filesystem::create_directories(cfg.output_path.parent_path());
+                std::filesystem::create_directories(cfg.output_path);
             }
-            std::cout << "Index folder: " << cfg.output_path << std::endl;
+            std::cout << "Index folder wasn't specified, will be stored on: " << cfg.output_path << std::endl;
+        }else{
+            if (!std::filesystem::exists(cfg.output_path))
+            {
+                std::filesystem::create_directories(cfg.output_path);
+            }
+            std::cout << "Index will be stored on: " << cfg.output_path << std::endl;
         }
     }
     catch (const po::error &e)
@@ -103,46 +107,46 @@ int handle_parameters(int argc, char **argv)
     return 0;
 }
 
-std::string fastaToConcatenatedFile(std::filesystem::path& fastaFile) {
-    //  check if txt does not exists
-    std::string ext = fastaFile.extension();
-    if (std::filesystem::exists(fastaFile.replace_extension(".txt"))){
-        std::cout << fastaFile << " has been already created and found on the required location" << std::endl;
-        return fastaFile;
-    }
-    fastaFile.replace_extension(ext);
+// std::string fastaToConcatenatedFile(std::filesystem::path& fastaFile) {
+//     //  check if txt does not exists
+//     std::string ext = fastaFile.extension();
+//     if (std::filesystem::exists(fastaFile.replace_extension(".txt"))){
+//         std::cout << fastaFile << " has been already created and found on the required location" << std::endl;
+//         return fastaFile;
+//     }
+//     fastaFile.replace_extension(ext);
 
-    std::ifstream inputFasta(fastaFile);
-    std::string line;
-    std::string concatenatedSequence;
+//     std::ifstream inputFasta(fastaFile);
+//     std::string line;
+//     std::string concatenatedSequence;
 
-while (std::getline(inputFasta, line)) {
-        if (line[0] != '>')
-            concatenatedSequence += line;
-        if (line[0] == '>' && !concatenatedSequence.empty())
-            concatenatedSequence += '$';            
-    }
+// while (std::getline(inputFasta, line)) {
+//         if (line[0] != '>')
+//             concatenatedSequence += line;
+//         if (line[0] == '>' && !concatenatedSequence.empty())
+//             concatenatedSequence += '$';            
+//     }
 
-    // Generate a unique file name
-    std::string outputFileName = fastaFile.replace_extension(".txt");
+//     // Generate a unique file name
+//     std::string outputFileName = fastaFile.replace_extension(".txt");
 
-    // Save the concatenated sequence to the file
-    std::ofstream outputFile(outputFileName);
-    outputFile << concatenatedSequence;
-    outputFile.close();
+//     // Save the concatenated sequence to the file
+//     std::ofstream outputFile(outputFileName);
+//     outputFile << concatenatedSequence;
+//     outputFile.close();
 
-    return outputFileName;
-}
+//     return outputFileName;
+// }
 
 void run()
 {
     // Measurements
 
     //  BUILD
-    if(cfg.input_path.extension() == ".fa" || cfg.input_path.extension() == ".fasta"){ // TODO - better recognition or an argument setup
-        std::cout << "fasta to string" << std::endl;
-        cfg.input_path = fastaToConcatenatedFile(cfg.input_path);
-    }
+    // if(cfg.input_path.extension() == ".fa" || cfg.input_path.extension() == ".fasta"){ // TODO - better recognition or an argument setup
+    //     std::cout << "fasta to string" << std::endl;
+    //     cfg.input_path = fastaToConcatenatedFile(cfg.input_path);
+    // }
     Index index = Index(cfg.rebuild,cfg.output_path); //  load or build index
     double build_time = index.build(cfg.input_path);
 

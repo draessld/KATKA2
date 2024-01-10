@@ -13,7 +13,7 @@
 
 struct Indexcfg{
     bool rebuild = false;
-    std::filesystem::path out_path;
+    std::filesystem::path base_folder;
     std::string index_suffix = ".fmi";
     std::string lcp_suffix = ".lcp";
     std::string rmq_sa_suffix_min = ".rmqsamin";
