@@ -63,7 +63,7 @@ $   index-locate ../src/tests/test.fa -pACATA
 
 ##  Additional scripts
 ### Kernel
-kernelization - method that keeps only first occurence of every k-mer
+kernelization - losses method that keeps only first occurence of every k-mer
 
 ```
 ./kernelize -k3 ../src/tests/test.txt
