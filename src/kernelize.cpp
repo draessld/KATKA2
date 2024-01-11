@@ -150,45 +150,34 @@ int string_kernel(std::string &text, unsigned k)
         }
     }
 
+    std::string kernel;
+    bool gap = false;
 
-    if (cfg.to_publication)
+    for (size_t i = 0; i < B.size(); i++)
     {
-        for (size_t i = 0; i < B.size(); i++)
-        {
-            if (!B[i] && text[i] != '$'){
-                text[i] = '-';
-            }
-
-        }
-    }else{
-        bool dolar = false;
-        bool divider = false;
-        size_t j = 0;
-        for (size_t i = 0; i < B.size(); i++){
-            if (B[i] || text[j] == '$'){ // keep character in text
-                if (text[j] == '$')
-                {
-                    dolar = true;
-                    if(divider){
-                        //remove divider on previous position
-                        text.erase(--j, 1);
-                        divider = false;
-                    }
-                }else{
-                    dolar = false;
-                }
-                j++;
+        if (!B[i] && text[i] != '$'){
+            if (cfg.to_publication)
+            {
+                kernel.push_back('-');
+            }else if (!gap){
+                gap = true;
+                kernel.push_back('#');
+            }                
+        }else{
+            if(kernel.back() == '#' && text[i] == '$'){
+                kernel.back() = text[i];
+                gap = true;
+            }else if(text[i] == '$' ){
+                kernel.push_back(text[i]);
+                gap = true;
             }else{
-                if (!divider && !dolar)
-                {
-                    text[j++] = cfg.c;
-                    divider = true;
-                }else{
-                    text.erase(j, 1);
-                }
+                kernel.push_back(text[i]);
+                gap = false;
             }
         }
     }
+
+    text = kernel;
 
     return 0;
 }
