@@ -110,7 +110,7 @@ double Index::locate(std::string pattern)
                 // std::cout << "MEM found " << extract(cst,r).substr(0,length-1) << "with original position in the text: "  << cst.sn(cst.leftmost_leaf(r)) << "," << cst.sn(cst.rightmost_leaf(r)) << std::endl;
                 occurences.emplace_back(i + 1, length - 1, rankB(cst.sn(cst.leftmost_leaf(r))), rankB(cst.sn(cst.rightmost_leaf(r)))); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
             }
-            if (cst.depth(r)!=0){ //also old node is a root - there wont be any change
+            if (cst.depth(r)!=0){
                 r = cst.parent(r);
                 length = cst.depth(r);
                 i++;
