@@ -2,3 +2,4 @@ build/**
 src/tests/test/**
 src/tests/yeast/**
 include/**
+other/**

@@ -24,11 +24,11 @@ int handle_parameters(int argc, char **argv)
         ("silent,s", "silent mode")
         ("rebuild,c", "rebuild data structures even they already exist")
         ("pattern,p", po::value<std::string>(&cfg.pattern), "print occurences of every pattern")
-        ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path)->required(), "input file")
+        ("index-file,i", po::value<std::filesystem::path>(&cfg.input_path)->required(), "index file")
         ("pattern-file,P", po::value<std::filesystem::path>(&cfg.pattern_file), "input pattern file path (positional arg 2)");
 
     po::positional_options_description posOptions;
-    posOptions.add("input-file", 1);
+    posOptions.add("index-file", 1);
 
     po::variables_map vm;
 
@@ -66,7 +66,7 @@ int handle_parameters(int argc, char **argv)
             std::cout << inf.versionInfo << std::endl;
             return 1;
         }
-        if (vm.count("input-file") == 0)
+        if (vm.count("index-file") == 0)
         {
             std::cout << "Usage: " << argv[0] << " " << inf.buildUsageInfoString << std::endl
                       << std::endl;
@@ -125,6 +125,7 @@ void print_MEMs(std::vector<T> occurences,std::string pattern){
 void run(filesystem::path index_path){
 
     //  Load index
+    index_path.replace_extension("");
     Index index = Index(index_path);
     index.build(index_path);
 
@@ -139,7 +140,8 @@ void run(filesystem::path index_path){
     //  locate patterns
     for (size_t i = 0; i < patterns.size(); i++)
     {   
-        std::cout << '>' <<patterns[i] << '\t' << index.locate(patterns[i]) << "ms" << '\t' << index.occurences.size()<<std::endl;
+        index.locate(patterns[i]);
+        // std::cout << '>' <<patterns[i] << '\t' << index.locate(patterns[i]) << "ms" << '\t' << index.occurences.size()<<std::endl;
         print_MEMs(index.occurences,patterns[i]);
         index.occurences.clear();
     }
