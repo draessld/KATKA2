@@ -166,9 +166,13 @@ int string_kernel(std::string &text, unsigned k)
         }else{
             if(kernel.back() == '#' && text[i] == '$'){
                 kernel.back() = text[i];
+                if (cfg.to_publication)
+                    kernel.push_back('\n');            
                 gap = true;
             }else if(text[i] == '$' ){
                 kernel.push_back(text[i]);
+                if (cfg.to_publication)
+                    kernel.push_back('\n');
                 gap = true;
             }else{
                 kernel.push_back(text[i]);
@@ -207,11 +211,27 @@ int main(int argc, char **argv)
     }
 
     // Read the file character by character
-    char c;
     std::string kernel;
+    // std::string line;
 
-    while (in.get(c))
-        kernel.push_back(c);
+    // while (std::getline(in, line)) {
+    //     kernel += line;
+    // }
+
+        // Read the file character by character
+    char ch;
+    while (in.get(ch)) {
+        // Skip carriage return characters
+        if (ch == '\r' || ch == '\n') {
+            continue;
+        }
+
+        // Concatenate non-carriage return characters
+        kernel += ch;
+    }
+
+    // while (in.get(c))
+    //     kernel.push_back(c);
 
     in.close();
 

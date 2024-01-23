@@ -92,7 +92,7 @@ int handle_parameters(int argc, char **argv)
 
 int read_patterns(std::filesystem::path file_path, std::vector<std::string> &patterns)
 {
-    std::cout << "reading pattern file" << std::endl;
+    std::cout << "-=-=-=-=-=-   Reading Patterns   ..."   <<    std::endl;
 
     std::ifstream in(file_path);
     unsigned number_of_patterns = 0;
@@ -106,10 +106,10 @@ int read_patterns(std::filesystem::path file_path, std::vector<std::string> &pat
     while (std::getline(in, line)) {
         patterns.push_back(line);
         number_of_patterns++;
-        std::cout << "Read line: " << line << std::endl;
     }
 
     in.close();
+    std::cout << "-=-=-=-=-=-   Reading Patterns - DONE, total number:" << patterns.size()   <<    std::endl;
 
     return 0;
 }
@@ -125,9 +125,8 @@ void print_MEMs(std::vector<T> occurences,std::string pattern){
 void run(filesystem::path index_path){
 
     //  Load index
-    index_path.replace_extension("");
     Index index = Index(index_path);
-    index.build(index_path);
+    index.build();
 
     //  Load patterns
     vector<string> patterns;

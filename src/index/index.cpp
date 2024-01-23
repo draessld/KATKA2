@@ -1,22 +1,32 @@
 #include "index.h"
 
-Index::Index(std::filesystem::path index_folder)
+Index::Index(std::filesystem::path text_file)
 {
-    config.base_folder = index_folder;
+    std::string filename = text_file.filename();
+    config.base_path = text_file.replace_extension(".index");
+    std::cout << "Index destination on " << config.base_path << std::endl;
+    if (!std::filesystem::exists(config.base_path))
+        std::filesystem::create_directories(config.base_path);
+    config.base_path.append(filename);
+    config.text_file = text_file.replace_filename(filename);
 }
 
-Index::Index(bool rebuild, std::filesystem::path index_folder) : rebuild(rebuild)
+Index::Index(bool rebuild, std::filesystem::path text_file) : rebuild(rebuild)
 {
-    config.base_folder = index_folder;
+    
+    std::string filename = text_file.filename();
+    config.base_path = text_file.replace_extension(".index");
+    std::cout << "Index destination on " << config.base_path << std::endl;
+    if (!std::filesystem::exists(config.base_path))
+        std::filesystem::create_directories(config.base_path);
+    config.base_path.append(filename);
+    config.text_file = text_file.replace_filename(filename);
 }
 
 Index::~Index() {}
 
-double Index::build(std::filesystem::path text_file)
+double Index::build()
 {
-
-    config.base_folder.append(text_file.filename().replace_extension().c_str());
-    std::cout << config.base_folder << std::endl;
 
     std::cout << "-=-=-=-=-=-   Building index   ...   " << std::endl;
 
@@ -24,16 +34,16 @@ double Index::build(std::filesystem::path text_file)
     auto startTime = base;
 
     //  build compressed suffix tree
-    if (rebuild || !sdsl::load_from_file(cst, config.base_folder.replace_extension(config.cst_suffix)))
+    if (rebuild || !sdsl::load_from_file(cst, config.base_path.replace_extension(".cst")))
     {
-        std::ifstream in(text_file);
+        std::ifstream in(config.text_file);
         if (!in)
         {
-            std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
+            std::cout << "ERROR: File " << config.text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No compact suffix tree on " << config.base_folder.replace_extension(config.cst_suffix) << " located. Building now ...   ";
-        sdsl::construct(cst, text_file, 1);
-        sdsl::store_to_file(cst, config.base_folder.replace_extension(config.cst_suffix));
+        std::cout << "No compact suffix tree on " << config.base_path.replace_extension(".cst") << " located. Building now ...   ";
+        sdsl::construct(cst, config.text_file, 1);
+        sdsl::store_to_file(cst, config.base_path.replace_extension(".cst"));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     startTime = std::chrono::high_resolution_clock::now();
@@ -41,14 +51,14 @@ double Index::build(std::filesystem::path text_file)
     text_size = cst.size();
 
     //  build rank support for $ character
-    if (rebuild || !sdsl::load_from_file(B, config.base_folder.replace_extension(config.rank_support_suffix)))
+    if (rebuild || !sdsl::load_from_file(B, config.base_path.replace_extension("ranksupp")))
     {
-        std::ifstream in(text_file);
+        std::ifstream in(config.text_file);
         if (!in)
         {
-            std::cout << "ERROR: File " << text_file << " does not exist. Exit." << std::endl;
+            std::cout << "ERROR: File " << config.text_file << " does not exist. Exit." << std::endl;
         }
-        std::cout << "No rank support  on " << config.base_folder.replace_extension(config.rank_support_suffix) << " located. Building now ...  ";
+        std::cout << "No rank support  on " << config.base_path.replace_extension("ranksupp") << " located. Building now ...  ";
         size_t i = 0;
         B.resize(text_size);
         char c;
@@ -60,7 +70,7 @@ double Index::build(std::filesystem::path text_file)
             else
                 i++;
         }
-        sdsl::store_to_file(B, config.base_folder.replace_extension(config.rank_support_suffix));
+        sdsl::store_to_file(B, config.base_path.replace_extension("ranksupp"));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     sdsl::util::assign(rankB, &B);
@@ -70,23 +80,17 @@ double Index::build(std::filesystem::path text_file)
     return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - base).count();
 }
 
-int Index::update_range(char c, size_t &length, Index::size_type &olb, Index::size_type &orb, Index::size_type &lb, Index::size_type &rb)
-{
-
-    return 0;
-}
-
-template<class t_cst>
-void output_node(const typename t_cst::node_type& v, const t_cst& cst)
-{
-    std::cout << cst.depth(v) << "-[" << cst.lb(v) << ","
-         << cst.rb(v) << "] ";
-    if(cst.depth(v)==0) std::cout << "root\n";
-    else {
-      std::string s = extract(cst,v);
-      std::cout << s << (s[s.size()-1] == 0 ? "$" : "") << std::endl;
-    } 
-}
+// template<class t_cst>
+// void output_node(const typename t_cst::node_type& v, const t_cst& cst)
+// {
+//     std::cout << cst.depth(v) << "-[" << cst.lb(v) << ","
+//          << cst.rb(v) << "] ";
+//     if(cst.depth(v)==0) std::cout << "root\n";
+//     else {
+//       std::string s = extract(cst,v);
+//       std::cout << s << (s[s.size()-1] == 0 ? "$" : "") << std::endl;
+//     } 
+// }
 
 double Index::locate(std::string pattern)
 {

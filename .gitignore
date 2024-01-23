@@ -3,3 +3,4 @@ src/tests/test/**
 src/tests/yeast/**
 include/**
 other/**
+experiments/parameter_tuning/**

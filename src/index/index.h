@@ -10,9 +10,8 @@
 
 struct Indexcfg{
     bool rebuild = false;
-    std::filesystem::path base_folder;
-    std::string rank_support_suffix = ".ranksupp";
-    std::string cst_suffix = ".cst";
+    std::filesystem::path text_file;
+    std::filesystem::path base_path; 
 };
 
 struct mem_occ{
@@ -32,7 +31,6 @@ private:
 
 public:
     typedef cst_type::size_type size_type;
-    int update_range(char c,size_t &length, size_type &olb, size_type &orb, size_type &lb, size_type &rb);
 
     Indexcfg config;
     size_t text_size;
@@ -47,7 +45,7 @@ public:
     Index(bool rebuild,std::filesystem::path output_path);
     ~Index();
 
-    double build(std::filesystem::path text_file); //  construct fm index supporting mem searching and rmq structure over SA
+    double build(); //  construct fm index supporting mem searching and rmq structure over SA
     double locate(std::string pattern);            //  locate all MeMs
 };
 #endif //  INDEX_H
