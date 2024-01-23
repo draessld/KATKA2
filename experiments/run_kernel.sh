@@ -9,7 +9,7 @@ execute_string_kernel="../build/kernelize"
 execute_minimizer_digest="../build/minimizer_digest"
 
 # Check if the user provided a folder as input
-if [ $# -eq 0 ]; then
+if [ $# -lt 1 ]; then
     echo "Usage: $0 <folder> <k>"
     exit 1
 fi
@@ -71,13 +71,13 @@ for file in $txt_files; do
     echo "Kernelize $file with parameter $k"
     $execute_string_kernel $file -k$k >$kernel_file
     echo "Kernelize $file with parameter $k => DONE"
-    echo Index saved on $kernel_file
+    echo Kernel saved on $kernel_file
 
     #  build index
     echo "Building index"
     $execute_mem_build $kernel_file -cs
     echo "Building index => DONE"
-    echo Index saved on $file.index/
+    echo Index saved on $kernel_file.index/
 
     #  locate pattern
     echo "Locating pattern"
