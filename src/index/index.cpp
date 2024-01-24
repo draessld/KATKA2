@@ -119,68 +119,39 @@ double Index::locate(std::string pattern)
     auto base = std::chrono::high_resolution_clock::now();
 
     auto r = cst.root();
-
-    // csXprintf(std::cout, "%2I %2S %3s %3P %2p %3B   %:3T", cst.csa);
-    
-    // std::cout << cst.csa << std::endl;
-    // std::cout << "max: " << rmq_sa_max(19,20) << std::endl;
-    // std::cout << "min: " << rmq_sa_min(1,10) << std::endl;
-
     size_t length = 1;
     auto o = r;
 
     for (int i = pattern.size() - 1; i >= 0; i--) //  at most 2*pattern.size() iterations
     {
         //  propagate into tree
-        // std::cout << pattern[i] << std::endl;
         r = o;
         o = cst.wl(r,pattern[i]);
-        // output_node(o,cst);
         if (cst.depth(o)==0){
             //  character was not found - returns root
 
             //  report MEM
             if (length > 1){
-                
-                
-                // std::cout << "MEM found " << pattern.substr(i+1,length-1) << std::endl;
                 occurences.emplace_back(i + 1, length - 1, rankB(cst.csa[rmq_sa_min(cst.lb(r),cst.rb(r))]), rankB(cst.csa[rmq_sa_max(cst.lb(r),cst.rb(r))])); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
-                // occurences.emplace_back(i + 1, length - 1, rankB(cst.lb(r)), rankB(cst.rb(r))); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
             }
             while (cst.depth(cst.wl(r,pattern[i])) == 0)
             {
-                // std::cout << "  up" << std::endl;
                 r = cst.parent(r);
-                // std::cout << "has new node wl on character " << pattern[i] << ":"<< cst.depth(cst.wl(r,pattern[i])) << std::endl;
-                // std::cout << "      ";
-                // output_node(r,cst);
-                if (cst.depth(r)==0){
-                    // std::cout << "      loop..ending" << std::endl;
+                if (cst.depth(r)==0)
                     break;
-                }
             }
             length = cst.depth(r);
             o=r;
             i++;
-            // if (cst.depth(r)!=0){
-            //     o = cst.parent(r);
-            //     // output_node(o,cst);
-            //     length = cst.depth(o);
-            //     i++;
-            // }else
-            //     length--;
         }
         if (i == 0){
             //  end of the pattern, report MEM
             if (length != 0){
-                // std::cout << "MEM found " << extract(cst,r) << std::endl;
                 occurences.emplace_back(i, length, rankB(cst.csa[rmq_sa_min(cst.lb(r),cst.rb(r))]), rankB(cst.csa[rmq_sa_max(cst.lb(r),cst.rb(r))])); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
-                // occurences.emplace_back(i + 1, length - 1, rankB(cst.csa[rmq_sa_min(cst.lb(r),cst.rb(r))]), rankB(cst.csa[rmq_sa_max(cst.lb(r),cst.rb(r))])); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
             }
             break;
         }
         length++;
-        // std::cout <<std::endl;
 
     }
     
