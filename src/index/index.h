@@ -6,7 +6,7 @@
 #include <algorithm>
 
 #include <sdsl/suffix_trees.hpp>
-#include <sdsl/lcp_support_sada.hpp>
+#include <sdsl/rmq_support.hpp>
 
 struct Indexcfg{
     bool rebuild = false;
@@ -37,6 +37,9 @@ public:
     sdsl::rank_support_v<> rankB;
     sdsl::bit_vector B;
     cst_type cst;
+
+    sdsl::rmq_succinct_sada<true> rmq_sa_min;
+    sdsl::rmq_succinct_sada<false> rmq_sa_max;
 
     double index_size;
     std::vector<mem_occ> occurences;
