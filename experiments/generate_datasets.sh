@@ -28,10 +28,16 @@ fi
 
 #  generate dataset
 echo "Generating dataset with parameter $ell $p1 $p2"
-$execute_generate $ell $p1 $2 | awk -v base_name=$output_folder$basename -v RS= '{ print > (base_name NR ".txt") }' 
+
+echo "Running program output"
+# $execute_generate $ell $p1 $2 | awk -v base_name=$output_folder$basename -v RS= '{ print > (base_name NR ".txt") }'
+output=$($execute_generate $ell $p1 $2)
+r=$(echo "$output" | tail -n 1)
+output=$(echo "$output" | head -n -1 | awk -v base_name=$output_folder$basename -v RS= '{ print > (base_name NR ".txt") }')
+echo $r
 #   rename
-mv "$output_folder${basename}1.txt" "$output_folder${basename}.txt"
-mv "$output_folder${basename}2.txt" "$output_folder${basename}.pattern"
+mv "$output_folder${basename}1.txt" "$output_folder${basename}.g$r.txt"
+mv "$output_folder${basename}2.txt" "$output_folder${basename}.g$r.pattern"
 echo "Generating dataset with parameter $ell $p1 $p2 => DONE"
 
 echo result saved on $output_folder${basename}.*

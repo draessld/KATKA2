@@ -3,7 +3,7 @@
 #include <string.h>
 #include "mtwister.h"
 
-void main(int argc, char **argv) {
+int main(int argc, char **argv) {
 	int ell, p1, p2;
 
 	ell = atoi(argv[1]);
@@ -78,6 +78,7 @@ void main(int argc, char **argv) {
 	}
 
 	printf("\n\n%s\n", read);
+	printf("\n\n%d\n", r);
 
-	return;
+	return r;
 }
