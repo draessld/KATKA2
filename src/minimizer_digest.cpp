@@ -288,7 +288,6 @@ int main(int argc, char **argv)
     minimizer_digest(digest, cfg.w);
     // if (!cfg.silent)
     std::cout << digest << std::endl;
-    std::cout << digest.size() << std::endl;
 
     // std::ofstream out(cfg.output_path, std::ios::binary);
 
