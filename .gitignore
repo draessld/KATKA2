@@ -3,5 +3,4 @@ src/tests/test/**
 src/tests/yeast/**
 include/**
 other/**
-experiments/*/**
-experiments/*/**
+!experiments/*.sh
