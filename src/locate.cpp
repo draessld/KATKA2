@@ -92,7 +92,7 @@ int handle_parameters(int argc, char **argv)
 
 int read_patterns(std::filesystem::path file_path, std::vector<std::string> &patterns)
 {
-    std::cout << "-=-=-=-=-=-   Reading Patterns   ..."   <<    std::endl;
+    // std::cout << "-=-=-=-=-=-   Reading Patterns   ..."   <<    std::endl;
 
     std::ifstream in(file_path);
     unsigned number_of_patterns = 0;
@@ -109,7 +109,7 @@ int read_patterns(std::filesystem::path file_path, std::vector<std::string> &pat
     }
 
     in.close();
-    std::cout << "-=-=-=-=-=-   Reading Patterns - DONE, total number:" << patterns.size()   <<    std::endl;
+    // std::cout << "-=-=-=-=-=-   Reading Patterns - DONE, total number:" << patterns.size()   <<    std::endl;
 
     return 0;
 }
@@ -118,8 +118,10 @@ template <typename T>
 void print_MEMs(std::vector<T> occurences,std::string pattern){
     for (size_t i = 0; i < occurences.size(); i++)
     {
-        std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ << std::endl;
+        // std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ;
+        std::cout << '[' <<occurences[i].index << ','<< occurences[i].index +occurences[i].length << "]{" << occurences[i].first_occ << ',' << occurences[i].last_occ << "}\t";
     }
+    std::cout << std::endl;
 }
 
 void run(filesystem::path index_path){
