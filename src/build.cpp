@@ -23,7 +23,6 @@ int handle_parameters(int argc, char **argv)
         ("version,v", "display version info")
         ("silent,s", "silent mode")
         ("rebuild,c", "rebuild data structures even they already exist")
-        ("basefolder,o", po::value<std::filesystem::path>(&cfg.output_path), "use <basefolder> as prefix for all index files. Default: current folder is the specified input_file_name")
         ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
@@ -78,21 +77,6 @@ int handle_parameters(int argc, char **argv)
         }
         po::notify(vm);
 
-        if (vm.count("basefolder") == 0)
-        {
-            cfg.output_path = cfg.input_path.parent_path().append(cfg.input_path.filename().replace_extension("").c_str());
-            if (!std::filesystem::exists(cfg.output_path))
-            {
-                std::filesystem::create_directories(cfg.output_path);
-            }
-            std::cout << "Index folder wasn't specified, will be stored on: " << cfg.output_path << std::endl;
-        }else{
-            if (!std::filesystem::exists(cfg.output_path))
-            {
-                std::filesystem::create_directories(cfg.output_path);
-            }
-            std::cout << "Index will be stored on: " << cfg.output_path << std::endl;
-        }
     }
     catch (const po::error &e)
     {
@@ -147,8 +131,8 @@ void run()
     //     std::cout << "fasta to string" << std::endl;
     //     cfg.input_path = fastaToConcatenatedFile(cfg.input_path);
     // }
-    Index index = Index(cfg.rebuild,cfg.output_path); //  load or build index
-    double build_time = index.build(cfg.input_path);
+    Index index = Index(cfg.rebuild,cfg.input_path); //  load or build index
+    double build_time = index.build();
 
     std::cout << "Build time: " << build_time << "s" << std::endl;
 }

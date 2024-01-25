@@ -24,11 +24,11 @@ int handle_parameters(int argc, char **argv)
         ("silent,s", "silent mode")
         ("rebuild,c", "rebuild data structures even they already exist")
         ("pattern,p", po::value<std::string>(&cfg.pattern), "print occurences of every pattern")
-        ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path)->required(), "input file")
+        ("index-file,i", po::value<std::filesystem::path>(&cfg.input_path)->required(), "index file")
         ("pattern-file,P", po::value<std::filesystem::path>(&cfg.pattern_file), "input pattern file path (positional arg 2)");
 
     po::positional_options_description posOptions;
-    posOptions.add("input-file", 1);
+    posOptions.add("index-file", 1);
 
     po::variables_map vm;
 
@@ -66,7 +66,7 @@ int handle_parameters(int argc, char **argv)
             std::cout << inf.versionInfo << std::endl;
             return 1;
         }
-        if (vm.count("input-file") == 0)
+        if (vm.count("index-file") == 0)
         {
             std::cout << "Usage: " << argv[0] << " " << inf.buildUsageInfoString << std::endl
                       << std::endl;
@@ -92,7 +92,7 @@ int handle_parameters(int argc, char **argv)
 
 int read_patterns(std::filesystem::path file_path, std::vector<std::string> &patterns)
 {
-    std::cout << "reading pattern file" << std::endl;
+    // std::cout << "-=-=-=-=-=-   Reading Patterns   ..."   <<    std::endl;
 
     std::ifstream in(file_path);
     unsigned number_of_patterns = 0;
@@ -106,10 +106,10 @@ int read_patterns(std::filesystem::path file_path, std::vector<std::string> &pat
     while (std::getline(in, line)) {
         patterns.push_back(line);
         number_of_patterns++;
-        std::cout << "Read line: " << line << std::endl;
     }
 
     in.close();
+    // std::cout << "-=-=-=-=-=-   Reading Patterns - DONE, total number:" << patterns.size()   <<    std::endl;
 
     return 0;
 }
@@ -118,15 +118,17 @@ template <typename T>
 void print_MEMs(std::vector<T> occurences,std::string pattern){
     for (size_t i = 0; i < occurences.size(); i++)
     {
-        std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ << std::endl;
+        // std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ;
+        std::cout << '[' <<occurences[i].index << ','<< occurences[i].index +occurences[i].length << "]{" << occurences[i].first_occ << ',' << occurences[i].last_occ << "}\t";
     }
+    std::cout << std::endl;
 }
 
 void run(filesystem::path index_path){
 
     //  Load index
     Index index = Index(index_path);
-    index.build(index_path);
+    index.build();
 
     //  Load patterns
     vector<string> patterns;
@@ -139,6 +141,7 @@ void run(filesystem::path index_path){
     //  locate patterns
     for (size_t i = 0; i < patterns.size(); i++)
     {   
+        // index.locate(patterns[i]);
         std::cout << '>' <<patterns[i] << '\t' << index.locate(patterns[i]) << "ms" << '\t' << index.occurences.size()<<std::endl;
         print_MEMs(index.occurences,patterns[i]);
         index.occurences.clear();

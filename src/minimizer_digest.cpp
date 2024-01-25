@@ -140,40 +140,88 @@ int triple2int(char a, char b, char c)
     return (sum);
 }
 
+// int minimizer_digest(std::string &text, unsigned w)
+// {
+//     sdsl::bit_vector B(text.size(), 0);
+//     for (size_t i = 0; i < text.size() - w; i++)
+//     {
+//         if (text[i + w] == '$')
+//         {
+//             i += w;
+//             continue;
+//         }
+//         int minVal = text[i];
+//         int minPos = i;
+//         for (size_t k = i+1; k < (i + w); k++)
+//         {
+//             if (text[k] < minVal)
+//             {
+//                 minVal = text[k];
+//                 minPos = k;
+//             }
+//         }
+//         B[minPos] = 1;
+//     }
+
+//     std::string digest;
+
+//     for (size_t i = 0; i < B.size(); i++)
+//     {
+//         if (B[i] || text[i] == '$' || text[i] == '#')
+//             digest.push_back(text[i]);
+//     }
+
+//     text = digest;
+//     return 0;
+// }
+
 int minimizer_digest(std::string &text, unsigned w)
 {
     sdsl::bit_vector B(text.size(), 0);
-    for (size_t i = 0; i < text.size() - w; i++)
-    {
-        if (text[i + w] == '$')
-        {
-            i += w;
-            continue;
-        }
-        int minVal = text[i];
-        int minPos = i;
-        for (size_t k = i + 1; k < (i + w); k++)
-        {
-            if (text[k] < minVal)
-            {
-                minVal = text[k];
-                minPos = k;
-            }
-        }
-        B[minPos] = 1;
+	int H[text.size()];
+
+    for (int i = 0; i <= text.size()-3; i++) {
+        // std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (char)(triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
+		H[i] = hash_function(triple2int(text[i],text[i+1],text[i+2]));
     }
 
-    size_t j = 0;
+	for (int i = 0; i <= (text.size()-2-w); i++) {
+            if (text[i+1+w] == '$' || text[i+w+1] == '#')
+            {
+                i += (1+w);
+                continue;
+            }
+
+			int minVal = H[i];
+			int minPos = i;
+			for (size_t k = 1; k < w ; k++) {
+				if (H [i+k] < minVal ) {
+					minVal = H [i+k];
+					minPos = i+k;
+				}
+			}
+			B[minPos] = 1;
+	}
+
+    std::string digest;
+
     for (size_t i = 0; i < B.size(); i++)
     {
-        if (B[i] || text[j] == '$' || text[j] == '#')
-            j++;
-        else
-            text.erase(j, 1);
+        if (text[i+2] == '$' || text[i+2] == '#'){
+            digest.push_back(text[i+2]);
+            // i+=(w);
+            continue;
+        }
+        if (B[i]){
+            digest.push_back((char)(triple2int(text[i],text[i+1],text[i+2])+37));
+        }
+            
     }
 
+    text = digest;
     return 0;
 }
+
 
 int main(int argc, char **argv)
 {
@@ -201,34 +249,39 @@ int main(int argc, char **argv)
 
     // Read the file character by character
     char c;
-    int i = 0;
-    char buffer[3];
-    int skip = 2;
+    // int i = 0;
+    // char buffer[3];
+    // int skip = 2;
 
     std::string digest;
 
     while (in.get(c))
     {
-        buffer[i % 3] = c;
-        if (c == '$' || c == '#')
-        {
-            digest.push_back('$');
-            skip = 3;
-        }
-        i++;
-        if ((skip--) <= 0)
-        {
-            // std::cout << buffer[i%3] << buffer[(i+1)%3] << buffer[(i+2)%3] <<':'<< triple2int(buffer[i%3],buffer[(i+1)%3], buffer[(i+2)%3])+37 << std::endl;;
-            if (cfg.printable)
-            {
-                digest.push_back(triple2int(buffer[i % 3], buffer[(i + 1) % 3], buffer[(i + 2) % 3]) + 37);
-            }
-            else
-            {
-                digest.push_back(hash_function(triple2int(buffer[i % 3], buffer[(i + 1) % 3], buffer[(i + 2) % 3])));
-            }
-        }
+        if (c == '\t' || c=='\n')
+            continue;
+        digest.push_back(c);
+    //     buffer[i % 3] = c;
+        
+    //     if (c == '$' || c == '#')
+    //     {
+    //         digest.push_back('$');
+    //         skip = 2;
+    //     }
+    //     i++;
+    //     if ((skip--) <= 0)
+    //     {
+    //         std::cout << buffer[i%3] << buffer[(i+1)%3] << buffer[(i+2)%3] <<':'<< triple2int(buffer[i%3],buffer[(i+1)%3], buffer[(i+2)%3])+37 << std::endl;;
+    //         if (cfg.printable)
+    //         {
+    //             digest.push_back(triple2int(buffer[i % 3], buffer[(i + 1) % 3], buffer[(i + 2) % 3]) + 37);
+    //         }
+    //         else
+    //         {
+    //             digest.push_back(hash_function(triple2int(buffer[i % 3], buffer[(i + 1) % 3], buffer[(i + 2) % 3])));
+    //         }
+    //     }
     }
+
 
     in.close();
 

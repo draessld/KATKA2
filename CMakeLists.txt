@@ -15,7 +15,6 @@ set(INDEX-LOCATE "index-locate")
 set(KERNELIZE "kernelize")
 set(MINIMIZER_DIGEST "minimizer_digest")
 
-
 set(KERNELIZE_EXEC "src/kernelize.cpp")
 set(MINIMIZER_DIGEST_EXEC "src/minimizer_digest.cpp")
 set(INDEX-BUILD_EXEC "src/build.cpp")
@@ -30,9 +29,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -st
 ############################################################
 file(GLOB index_C "src/index/*.cpp")
 file(GLOB index_H "src/index/*.h")
-file(GLOB katka_C "src/katka/*.cpp")
-file(GLOB katka_H "src/katka/*.h")
-file(GLOB index ${index_C} ${index_H} ${katka_C} ${katka_H})
+file(GLOB index ${index_C} ${index_H})
 
 # # INDEX UTILS
 # ############################################################
@@ -71,3 +68,12 @@ target_link_libraries(${INDEX-LOCATE} "-lsdsl")
 target_link_libraries(${INDEX-LOCATE} "-ldivsufsort")
 target_link_libraries(${INDEX-LOCATE} "-ldivsufsort64")
 target_link_libraries(${INDEX-LOCATE} "-lboost_program_options")
+
+#   KATKA2 dataset generator
+set(GENERATE_DATASET "generate_dataset")
+set(GENERATE_DATASET_EXEC "src/utils/KATKA2_build_dataset.c")
+file(GLOB mtwister_C "src/utils/mtwister.c")
+file(GLOB mtwister_H "src/utils/mtwister.h")
+file(GLOB mtwister ${mtwister_C} ${mtwister_H} )
+
+add_executable(${GENERATE_DATASET} ${GENERATE_DATASET_EXEC} ${mtwister})
