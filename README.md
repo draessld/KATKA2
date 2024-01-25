@@ -3,38 +3,20 @@
 ##  Brief description
 
 Software for finding the **leftmost** and the **rightmost** positions of every MEM of the pattern. 
-Implementation takes **input** in .fa / .fasta format or simple string/concatenation on strings divided with $.
-```
->genome1
-GATTACAT
->genome2
-AGATACAT
->genome3
-GATACAT
->genome4
-GATTAGAT
->genome5
-GATTAGATA
-```
-
+Implementation takes **input** as simple string or concatenation on strings divided with $.
 ```
 $GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA
 ```
 
 and gives **output** like
 ```
->pattern  time_in_ms    #Mems
-MEM1     index_in_pattern       length       leftmost_genome_index       rightmost_genome_index
-MEM2    index_in_pattern       ...
+>pattern1  time_in_ms    #Mems
+[MEM1start_position,MEM1end_position]{leftmost_genome_index,rightmost_genome_index}       [MEM2start_position,MEM2end_position]{leftmost_genome_index,rightmost_genome_index}       ...
+>pattern2  time_in_ms    #Mems
+[MEM1start_position,MEM1end_position]{leftmost_genome_index,rightmost_genome_index}       [MEM2start_position,MEM2end_position]{leftmost_genome_index,rightmost_genome_index}       ...
 ...
 ```
 
-##  Download
-
-To clone the repository, use following option:
-```
-$   git clone https://github.com/draessld/MEMmc
-```
 ##  Compile
 You need the SDSL library installed on your system (https://github.com/xxsds/sdsl-lite).
 
@@ -48,7 +30,7 @@ $   make
 After compiling, run
 
 ```
-$   index-build ../src/tests/test.fa
+$   index-build ../src/tests/test.txt
 ```
 
 input should be in format either *fasta* or *txt*.
@@ -57,7 +39,7 @@ This command will create the required data structures (FMindex,RMQs,LCPs) of the
 patterns_files should contains every pattern on a new line. For searching single pattern can be used option -p\<pattern\>.
 Run
 ```
-$   index-locate ../src/tests/test/test -P../src/tests/test.patterns 
+$   index-locate ../src/tests/test/test -P../src/tests/test.pattern
 $   index-locate ../src/tests/test/test -pACATA
 ```
 
@@ -70,10 +52,9 @@ kernelization - losses method that keeps only first occurence of every k-mer
 ```
 
 ### Minimizer digest
-not sure, if it works correctly.
 
 ```
-./minimizer_digest -p -w3 ../src/tests/test.txt
+./minimizer_digest -w3 ../src/tests/test.txt
 ```
 
 ##   Experiments
@@ -82,9 +63,9 @@ not sure, if it works correctly.
 ### generate_dataset
 
 ```
-Usage: generate_datasets.sh <length_of_genome> <p1> <p2>
+Usage: generate_datasets.sh <length_of_genome> <p1> <p2> <output_folder>
 ```
-for given arguments generate two files *dataset.\<length_of_genome\>.\<p1\>.\<p2\>.txt* and *dataset.\<length_of_genome\>.\<p1\>.\<p2\>.pattern* inside folder *experiment/parameter_tuning/*, that contains similar sequences of length *length_of_genome* based on probability *p1* and *p2*
+for given arguments generate two files *dataset.\<length_of_genome\>.\<p1\>.\<p2\>.txt* and *dataset.\<length_of_genome\>.\<p1\>.\<p2\>.pattern* inside folder *\<output_folder\>*, that contains similar sequences of length *length_of_genome* based on probability *p1* and *p2*
 
 ### run_classic
 ```
