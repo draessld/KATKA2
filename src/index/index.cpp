@@ -4,7 +4,7 @@ Index::Index(std::filesystem::path text_file)
 {
     std::string filename = text_file.filename();
     config.base_path = text_file.replace_extension(".index");
-    std::cout << "Index destination on " << config.base_path << std::endl;
+    // std::cout << "Index destination on " << config.base_path << std::endl;
     if (!std::filesystem::exists(config.base_path))
         std::filesystem::create_directories(config.base_path);
     config.base_path.append(filename);
@@ -16,7 +16,7 @@ Index::Index(bool rebuild, std::filesystem::path text_file) : rebuild(rebuild)
     
     std::string filename = text_file.filename();
     config.base_path = text_file.replace_extension(".index");
-    std::cout << "Index destination on " << config.base_path << std::endl;
+    // std::cout << "Index destination on " << config.base_path << std::endl;
     if (!std::filesystem::exists(config.base_path))
         std::filesystem::create_directories(config.base_path);
     config.base_path.append(filename);
