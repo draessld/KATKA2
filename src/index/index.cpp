@@ -100,19 +100,19 @@ double Index::build()
     return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - base).count();
 }
 
-// template<class t_cst>
-// void output_node(const typename t_cst::node_type& v, const t_cst& cst)
-// {
-//     std::cout << v << ":"<<cst.depth(v) << "-[" << cst.leftmost_leaf(v) << ","
-//          << cst.rightmost_leaf(v) << "] "<< "-[" << cst.lb(v) << ","
-//          << cst.rb(v) << "] "<< "-[" << cst.sn(cst.leftmost_leaf(v)) << ","
-//          << cst.sn(cst.rightmost_leaf(v)) << "] ";
-//     if(cst.depth(v)==0) std::cout << "root\n";
-//     else {
-//       std::string s = extract(cst,v);
-//       std::cout << s << (s[s.size()-1] == 0 ? "$" : "") << std::endl;
-//     } 
-// }
+template<class t_cst>
+void output_node(const typename t_cst::node_type& v, const t_cst& cst)
+{
+    std::cout << v << ":"<<cst.depth(v) << "-[" << cst.leftmost_leaf(v) << ","
+         << cst.rightmost_leaf(v) << "] "<< "-[" << cst.lb(v) << ","
+         << cst.rb(v) << "] "<< "-[" << cst.sn(cst.leftmost_leaf(v)) << ","
+         << cst.sn(cst.rightmost_leaf(v)) << "] ";
+    if(cst.depth(v)==0) std::cout << "root\n";
+    else {
+      std::string s = extract(cst,v);
+      std::cout << s << (s[s.size()-1] == 0 ? "$" : "") << std::endl;
+    } 
+}
 
 double Index::locate(std::string pattern)
 {
@@ -127,6 +127,7 @@ double Index::locate(std::string pattern)
         //  propagate into tree
         r = o;
         o = cst.wl(r,pattern[i]);
+                
         if (cst.depth(o)==0){
             //  character was not found - returns root
 
@@ -134,15 +135,19 @@ double Index::locate(std::string pattern)
             if (length > 1){
                 occurences.emplace_back(i + 1, length - 1, rankB(cst.csa[rmq_sa_min(cst.lb(r),cst.rb(r))]), rankB(cst.csa[rmq_sa_max(cst.lb(r),cst.rb(r))])); // Save MEM position in pattern, length, leftmost occ genome number, rightmost occ genome number
             }
-            while (cst.depth(cst.wl(r,pattern[i])) == 0)
+            if (r!=o) // no change from previous = both of them must be roots
+                i++;
+
+            while (cst.depth(cst.wl(r,pattern[i-1])) == 0)
             {
                 r = cst.parent(r);
+                // std::cout << "." << cst.depth(r) << (cst.depth(r)==0) << std::endl;
+
                 if (cst.depth(r)==0)
                     break;
             }
             length = cst.depth(r);
             o=r;
-            i++;
         }
         if (i == 0){
             //  end of the pattern, report MEM

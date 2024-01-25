@@ -118,7 +118,7 @@ template <typename T>
 void print_MEMs(std::vector<T> occurences,std::string pattern){
     for (size_t i = 0; i < occurences.size(); i++)
     {
-        // std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ;
+        // std::cout << pattern.substr(occurences[i].index,occurences[i].length)<< '\t' << occurences[i].index << '\t' <<  occurences[i].length << '\t' << occurences[i].first_occ << '\t' << occurences[i].last_occ << std::endl;
         std::cout << '[' <<occurences[i].index << ','<< occurences[i].index +occurences[i].length << "]{" << occurences[i].first_occ << ',' << occurences[i].last_occ << "}\t";
     }
     std::cout << std::endl;
