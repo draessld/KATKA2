@@ -178,14 +178,14 @@ int triple2int(char a, char b, char c)
 int minimizer_digest(std::string &text, unsigned w)
 {
     sdsl::bit_vector B(text.size(), 0);
-	int H[text.size()];
+	int *H = new int[text.size()];
 
-    for (int i = 0; i <= text.size()-3; i++) {
+    for (size_t i = 0; i <= text.size()-3; i++) {
         // std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (char)(triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
 		H[i] = hash_function(triple2int(text[i],text[i+1],text[i+2]));
     }
 
-	for (int i = 0; i <= (text.size()-2-w); i++) {
+	for (size_t i = 0; i <= (text.size()-2-w); i++) {
             if (text[i+1+w] == '$' || text[i+w+1] == '#')
             {
                 i += (1+w);
