@@ -9,12 +9,13 @@ execute_string_kernel="../build/kernelize"
 execute_minimizer_digest="../build/minimizer_digest"
 
 # Check if the user provided a folder as input
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <folder>"
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <folder> <w>"
     exit 1
 fi
 
 folder="$1"
+w="$2"
 
 # Check if the specified folder exists
 if [ ! -d "$folder" ]; then
@@ -57,7 +58,9 @@ for file in $txt_files; do
     base_filename="${filename%.*}"  # Remove the last extension
 
     pattern_file="$folder/$base_filename.pattern"
-    output_file="$folder/$filename.mem"
+    digest_pattern_file="$folder/$base_filename.$w.dgt.pattern"
+    digest_file="$folder/$base_filename.$w.dgt"
+    output_file="$folder/$base_filename.$w.dgt.mem"
 
     #   check if pattern file exists
     if [ -z "$pattern_file" ]; then
@@ -65,16 +68,28 @@ for file in $txt_files; do
         exit 0
     fi
     
+    #   create minimzer digest
+    echo "Digesting $file with parameter $w"
+    $execute_minimizer_digest $file -p -w$w >$digest_file
+    echo "Digesting $file with parameter $w => DONE"
+    echo Minimizer digest saved on $digest_file
+
     #  build index
     echo "Building index"
-    output=$($execute_mem_build $file -cs)
-    echo $output>$folder/$filename.index/build.out
+    output=$($execute_mem_build $digest_file -cs)
+    echo $output>$folder/$base_filename.$w.dgt.index/build.out
     echo "Building index => DONE"
-    echo Index saved on $base_filename.index/
+    echo Index saved on $$digest_file.index/
+
+    #  Create minizer digest of the pattern
+    echo "Digesting $pattern_file with parameter $w"
+    $execute_minimizer_digest $pattern_file -p -w$w >$digest_pattern_file
+    echo "Digesting $pattern_file with parameter $w => DONE"
+    echo Minimizer digest saved on $digest_pattern_file
 
     #  locate pattern
     echo "Locating pattern"
-    $execute_mem_locate $file -P$pattern_file >$output_file
+    $execute_mem_locate $digest_file -P$digest_pattern_file >$output_file
     echo "Locating pattern => DONE"
 
     echo result saved on $output_file

@@ -3,8 +3,9 @@
 Index::Index(std::filesystem::path text_file)
 {
     std::string filename = text_file.filename();
-    config.base_path = text_file.replace_extension(".index");
-    // std::cout << "Index destination on " << config.base_path << std::endl;
+    std::string ext = text_file.extension().c_str();
+    config.base_path = text_file.replace_extension(ext+".index");
+    std::cout << "Index destination on " << config.base_path << std::endl;
     if (!std::filesystem::exists(config.base_path))
         std::filesystem::create_directories(config.base_path);
     config.base_path.append(filename);
@@ -15,8 +16,9 @@ Index::Index(bool rebuild, std::filesystem::path text_file) : rebuild(rebuild)
 {
     
     std::string filename = text_file.filename();
-    config.base_path = text_file.replace_extension(".index");
-    // std::cout << "Index destination on " << config.base_path << std::endl;
+    std::string ext = text_file.extension().c_str();
+    config.base_path = text_file.replace_extension(ext+".index");
+    std::cout << "Index destination on " << config.base_path << std::endl;
     if (!std::filesystem::exists(config.base_path))
         std::filesystem::create_directories(config.base_path);
     config.base_path.append(filename);
@@ -97,7 +99,8 @@ double Index::build()
 
     double index_size = size_in_mega_bytes(cst) + size_in_mega_bytes(rankB);
     // std::cout << "-=-=-=-=-=-   Building index - DONE, size:  " << index_size << " MiB." << std::endl;
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - base).count();
+    return index_size;
+    // return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - base).count();
 }
 
 template<class t_cst>
@@ -159,6 +162,8 @@ double Index::locate(std::string pattern)
         length++;
 
     }
+
+    // return 
     
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - base).count();
 }

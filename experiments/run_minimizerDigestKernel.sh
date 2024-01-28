@@ -84,7 +84,8 @@ for file in $txt_files; do
 
     #  build index
     echo "Building index"
-    $execute_mem_build $kernel_file -cs
+    output=$($execute_mem_build $kernel_file -cs)
+    echo $output>$folder/$base_filename.$w.dgt.$k.krl.index/build.out
     echo "Building index => DONE"
     echo Index saved on $kernel_file.index/
 

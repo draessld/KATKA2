@@ -132,9 +132,10 @@ void run()
     //     cfg.input_path = fastaToConcatenatedFile(cfg.input_path);
     // }
     Index index = Index(cfg.rebuild,cfg.input_path); //  load or build index
-    double build_time = index.build();
+    double build_result = index.build();
 
-    std::cout << "Build time: " << build_time << "s" << std::endl;
+    std::cout << "Index size: " << build_result << "MB" << std::endl;
+    // std::cout << "Build time: " << build_result << "s" << std::endl;
 }
 
 int main(int argc, char **argv)
