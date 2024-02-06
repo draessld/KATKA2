@@ -134,8 +134,8 @@ void run()
     Index index = Index(cfg.rebuild,cfg.input_path); //  load or build index
     double build_result = index.build();
 
-    std::cout << "Index size: " << build_result << "MB" << std::endl;
-    // std::cout << "Build time: " << build_result << "s" << std::endl;
+    // std::cout << "Index size: " << build_result << "MB" << std::endl;
+    std::cout << "Build time: " << build_result << "s" << std::endl;
 }
 
 int main(int argc, char **argv)

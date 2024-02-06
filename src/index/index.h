@@ -28,6 +28,7 @@ class Index
 private:
     typedef sdsl::cst_sada<sdsl::csa_wt<>, sdsl::lcp_support_sada<>> cst_type;
     bool rebuild = false;
+    sdsl::csa_wt<sdsl::wt_huff<>, 1, 1 << 20> tmp_csa;
 
 public:
     typedef cst_type::size_type size_type;
@@ -38,8 +39,8 @@ public:
     sdsl::bit_vector B;
     cst_type cst;
 
-    sdsl::rmq_succinct_sada<true> rmq_sa_min;
-    sdsl::rmq_succinct_sada<false> rmq_sa_max;
+    sdsl::rmq_succinct_sct<true> rmq_sa_min;
+    sdsl::rmq_succinct_sct<false> rmq_sa_max;
 
     double index_size;
     std::vector<mem_occ> occurences;

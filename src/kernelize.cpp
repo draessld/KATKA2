@@ -155,7 +155,7 @@ int string_kernel(std::string &text, unsigned k)
 
     for (size_t i = 0; i < B.size(); i++)
     {
-        if (!B[i] && text[i] != '$'){
+        if (!B[i] && text[i] != '$' && text[i] !='#'){
             if (cfg.to_publication)
             {
                 kernel.push_back('-');
@@ -169,7 +169,7 @@ int string_kernel(std::string &text, unsigned k)
                 if (cfg.to_publication)
                     kernel.push_back('\n');            
                 gap = true;
-            }else if(text[i] == '$' ){
+            }else if(text[i] == '$' || text[i] == '#'){
                 kernel.push_back(text[i]);
                 if (cfg.to_publication)
                     kernel.push_back('\n');

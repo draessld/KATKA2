@@ -12,12 +12,14 @@ const std::string desc = "";
 
 typedef struct Config
 {
-    uint32_t w;
+    int w;
     bool printable = false;
     bool silent = false;
     std::filesystem::path output_path;
     std::filesystem::path input_path;
     std::string suffix = ".dgt";
+    std::string pattern;
+
 } Config;
 
 Config cfg;
@@ -27,15 +29,12 @@ int handle_parameters(int argc, char **argv)
     po::options_description desc("Allowed options");
 
     desc.add_options()("help", "produce help message")
-    // ("help-verbose", "display verbose help message")
     ("printable,p", "to see hashed values")
-    // ("silent,s", "silent mode")
-    ("window_size,w", po::value<uint32_t>(&cfg.w), "lookahead window size")
-    // ("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")
+    ("window_size,w", po::value<int>(&cfg.w), "lookahead window size")
+    ("input,s", po::value<std::string>(&cfg.pattern), "print occurences of every pattern")
     ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
-    posOptions.add("input-file", 1);
     posOptions.add("window_size", 1);
 
     po::variables_map vm;
@@ -54,10 +53,6 @@ int handle_parameters(int argc, char **argv)
         {
             cfg.printable = true;
         }
-        // if (vm.count("silent"))
-        // {
-        //     cfg.silent = true;
-        // }
         if (vm.count("help-verbose"))
         {
             std::cout << desc << std::endl;
@@ -66,14 +61,14 @@ int handle_parameters(int argc, char **argv)
 
             return 1;
         }
-        if (vm.count("input-file") == 0)
-        {
-            std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
-                      << std::endl;
-            std::cout << desc << std::endl;
+        // if (vm.count("input-file") == 0)
+        // {
+        //     std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
+        //               << std::endl;
+        //     std::cout << desc << std::endl;
 
-            return -1;
-        }
+        //     return -1;
+        // }
         po::notify(vm);
     }
     catch (const po::error &e)
@@ -140,68 +135,37 @@ int triple2int(char a, char b, char c)
     return (sum);
 }
 
-// int minimizer_digest(std::string &text, unsigned w)
-// {
-//     sdsl::bit_vector B(text.size(), 0);
-//     for (size_t i = 0; i < text.size() - w; i++)
-//     {
-//         if (text[i + w] == '$')
-//         {
-//             i += w;
-//             continue;
-//         }
-//         int minVal = text[i];
-//         int minPos = i;
-//         for (size_t k = i+1; k < (i + w); k++)
-//         {
-//             if (text[k] < minVal)
-//             {
-//                 minVal = text[k];
-//                 minPos = k;
-//             }
-//         }
-//         B[minPos] = 1;
-//     }
-
-//     std::string digest;
-
-//     for (size_t i = 0; i < B.size(); i++)
-//     {
-//         if (B[i] || text[i] == '$' || text[i] == '#')
-//             digest.push_back(text[i]);
-//     }
-
-//     text = digest;
-//     return 0;
-// }
-
 int minimizer_digest(std::string &text, unsigned w)
 {
     sdsl::bit_vector B(text.size(), 0);
 	int *H = new int[text.size()];
 
     for (size_t i = 0; i <= text.size()-3; i++) {
-        // std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (char)(triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
+        std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
 		H[i] = hash_function(triple2int(text[i],text[i+1],text[i+2]));
     }
 
-	for (size_t i = 0; i <= (text.size()-2-w); i++) {
-            if (text[i+1+w] == '$' || text[i+w+1] == '#')
-            {
-                i += (1+w);
-                continue;
-            }
-
-			int minVal = H[i];
-			int minPos = i;
-			for (size_t k = 1; k < w ; k++) {
-				if (H [i+k] < minVal ) {
-					minVal = H [i+k];
-					minPos = i+k;
-				}
-			}
-			B[minPos] = 1;
-	}
+    if (text.size() >= (w+2))
+    {    
+	    for (size_t i = 0; i <= (text.size()-2-w); i++) {
+                if (text[i+1+w] == '$' || text[i+w+1] == '#')
+                {
+                    i += (1+w);
+                    continue;   
+                }
+    
+	    		int minVal = H[i];
+	    		int minPos = i;
+	    		for (size_t k = 1; k < w; k++) {
+	    			if (H [i+k] < minVal ) {
+	    				minVal = H [i+k];
+	    				minPos = i+k;
+	    			}
+	    		}
+	    		B[minPos] = 1;
+	    }
+    }
+    std::cout << B << std::endl;
 
     std::string digest;
 
@@ -238,67 +202,38 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    //  read
-    std::ifstream in(cfg.input_path, std::ios::binary);
+    if(!cfg.input_path.empty()){
+        std::string digest;
+        std::ifstream in(cfg.input_path, std::ios::binary);
+        char c;
 
-    if (!in)
-    {
-        std::cout << "ERROR: File " << cfg.input_path << " does not exist. Exit." << std::endl;
-        return 1;
+        while (in.get(c))
+        {
+            if (c == '\t' || c=='\n')
+                continue;
+            digest.push_back(c);
+            if (!in)
+            {
+                std::cout << "ERROR: File " << cfg.input_path << " does not exist. Exit." << std::endl;
+                return 1;
+            }
+        }
+        in.close();
+        minimizer_digest(digest, cfg.w);
+        std::cout << digest << std::endl;
     }
 
-    // Read the file character by character
-    char c;
-    // int i = 0;
-    // char buffer[3];
-    // int skip = 2;
-
-    std::string digest;
-
-    while (in.get(c))
-    {
-        if (c == '\t' || c=='\n')
-            continue;
-        digest.push_back(c);
-    //     buffer[i % 3] = c;
-        
-    //     if (c == '$' || c == '#')
-    //     {
-    //         digest.push_back('$');
-    //         skip = 2;
-    //     }
-    //     i++;
-    //     if ((skip--) <= 0)
-    //     {
-    //         std::cout << buffer[i%3] << buffer[(i+1)%3] << buffer[(i+2)%3] <<':'<< triple2int(buffer[i%3],buffer[(i+1)%3], buffer[(i+2)%3])+37 << std::endl;;
-    //         if (cfg.printable)
-    //         {
-    //             digest.push_back(triple2int(buffer[i % 3], buffer[(i + 1) % 3], buffer[(i + 2) % 3]) + 37);
-    //         }
-    //         else
-    //         {
-    //             digest.push_back(hash_function(triple2int(buffer[i % 3], buffer[(i + 1) % 3], buffer[(i + 2) % 3])));
-    //         }
-    //     }
+    if(!cfg.pattern.empty()){
+        minimizer_digest(cfg.pattern, cfg.w);
+        std::cout << cfg.pattern << std::endl;
     }
 
+    
 
-    in.close();
 
-    minimizer_digest(digest, cfg.w);
-    // if (!cfg.silent)
-    std::cout << digest << std::endl;
 
-    // std::ofstream out(cfg.output_path, std::ios::binary);
-
-    // if (!out.is_open())
-    // {
-    //     std::cout << "ERROR: File " << cfg.output_path << " cannot be openned. Exit." << std::endl;
-    //     return 1;
-    // }
-
-    // out << digest;
-    // out.close();
+    // minimizer_digest(digest, cfg.w);
+    // std::cout << digest << std::endl;
 
     return 0;
 }
