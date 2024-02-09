@@ -36,7 +36,6 @@ double Index::build()
     auto startTime = base;
 
     //  build compressed suffix tree
-    std::cout << "1" << std::endl; 
     if (rebuild || !sdsl::load_from_file(cst, config.base_path.replace_extension(".cst")))
     {
         std::ifstream in(config.text_file);
@@ -55,11 +54,11 @@ double Index::build()
     if (rebuild || !sdsl::load_from_file(rmq_sa_max, config.base_path.replace_extension(".rmq_max")))
     {
         std::cout << "No RMQ for SA on " << config.base_path.replace_extension(".rmq_max") << " located. Building now ... ";
-        sdsl::construct(tmp_csa, config.text_file, 1);
-        sdsl::util::assign(rmq_sa_max, sdsl::rmq_succinct_sct<false>(&tmp_csa));
 
-        // sdsl::util::assign(rmq_sa_max, sdsl::rmq_succinct_sada<false>(&cst.csa));
+        sdsl::construct(tmp_csa,config.text_file, 1);
+        sdsl::util::assign(rmq_sa_max, sdsl::rmq_succinct_sct<false>(&tmp_csa));
         sdsl::store_to_file(rmq_sa_max, config.base_path.replace_extension(".rmq_max"));
+        
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
     startTime = std::chrono::high_resolution_clock::now();
@@ -68,10 +67,8 @@ double Index::build()
     if (rebuild || !sdsl::load_from_file(rmq_sa_min, config.base_path.replace_extension(".rmq_min")))
     {
         std::cout << "No RMQ for SA on " << config.base_path.replace_extension(".rmq_min") << " located. Building now ... ";
-        sdsl::construct(tmp_csa, config.text_file, 1);
+        sdsl::construct(tmp_csa,config.text_file, 1);
         sdsl::util::assign(rmq_sa_min, sdsl::rmq_succinct_sct<true>(&tmp_csa));
-
-        // sdsl::util::assign(rmq_sa_min, sdsl::rmq_succinct_sada<true>(&cst.csa));
         sdsl::store_to_file(rmq_sa_min, config.base_path.replace_extension(".rmq_min"));
         std::cout << " ==> DONE in " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     }
@@ -104,10 +101,10 @@ double Index::build()
     }
     sdsl::util::assign(rankB, &B);
 
-    double index_size = size_in_mega_bytes(cst) + size_in_mega_bytes(rankB) + size_in_mega_bytes(rmq_sa_min) + size_in_mega_bytes(rmq_sa_max);
+    double index_size = size_in_mega_bytes(cst) + size_in_mega_bytes(B) + size_in_mega_bytes(rmq_sa_min) + size_in_mega_bytes(rmq_sa_max);
     std::cout << "-=-=-=-=-=-   Building index - DONE, size:  " << index_size << " MiB." << std::endl;
     // return index_size;
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - base).count();
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - base).count();
 }
 
 template <class t_cst>
@@ -179,5 +176,5 @@ double Index::locate(std::string pattern)
 
     // return
 
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - base).count();
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - base).count();
 }

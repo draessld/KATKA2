@@ -4,7 +4,6 @@ src/tests/**
 experiments/**
 
 #   exclude
-!experiments/*.sh
 !src/tests/test.txt
 !src/tests/test.pattern
 !src/tests/yeast.txt

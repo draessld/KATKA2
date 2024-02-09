@@ -142,7 +142,7 @@ void run(filesystem::path index_path){
     for (size_t i = 0; i < patterns.size(); i++)
     {   
         // index.locate(patterns[i]);
-        std::cout << '>' <<patterns[i] << '\t' << index.locate(patterns[i]) << "ms" << '\t' << index.occurences.size()<<std::endl;
+        std::cout << '>' <<patterns[i] << '\t' << index.locate(patterns[i]) << "us" << '\t' << index.occurences.size()<<std::endl;
         print_MEMs(index.occurences,patterns[i]);
         index.occurences.clear();
     }

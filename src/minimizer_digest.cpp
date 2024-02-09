@@ -141,7 +141,7 @@ int minimizer_digest(std::string &text, unsigned w)
 	int *H = new int[text.size()];
 
     for (size_t i = 0; i <= text.size()-3; i++) {
-        std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
+        // std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
 		H[i] = hash_function(triple2int(text[i],text[i+1],text[i+2]));
     }
 
@@ -165,7 +165,7 @@ int minimizer_digest(std::string &text, unsigned w)
 	    		B[minPos] = 1;
 	    }
     }
-    std::cout << B << std::endl;
+    // std::cout << B << std::endl;
 
     std::string digest;
 

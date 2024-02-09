@@ -135,7 +135,7 @@ void run()
     double build_result = index.build();
 
     // std::cout << "Index size: " << build_result << "MB" << std::endl;
-    std::cout << "Build time: " << build_result << "s" << std::endl;
+    std::cout << "Build time: " << build_result << "μs" << std::endl;
 }
 
 int main(int argc, char **argv)
