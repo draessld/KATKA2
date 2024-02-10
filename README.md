@@ -5,12 +5,12 @@ Software for finding the **leftmost** and the **rightmost** positions of each ME
 with respect to the text described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*
 
 
-Implementation takes **input** as simple string or concatenation on strings divided with $.
+Implementation takes **input** as simple string or a concatenation of strings divided with $ character.
 ```
 GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA
 ```
 
-and gives **output** like
+Gives an **output** like
 ```
 >pattern  time_in_ms    #Mems
 [start_position,end_position]{leftmost_genome,rightmost_genome}       [start_position,end_position]{leftmost_genome,rightmost_genome}       ...
