@@ -1,7 +1,7 @@
 # MEM finding tool for metagenomic classification
 
 ##  Brief description
-Software for finding the **leftmost** and the **rightmost** positions of every MEM relative to the pattern described in 
+Software for finding the **leftmost** and the **rightmost** positions of every MEM relative to the pattern described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*
 
 
 Implementation takes **input** as simple string or concatenation on strings divided with $.
@@ -73,5 +73,3 @@ to digest simple pattern
 Experiments settled in the article were runned over the SILVA dataset available [here](https://www.arb-silva.de/download/arb-files/). 1000 samples were taken in range 1100-2099 from total 9118 reference files. Main result of the project is described within the following graph.
 
 ![graph](1000genomes_simulated_error_rate_1p_w_lines.png?raw=true "Title")
-
-##   References
