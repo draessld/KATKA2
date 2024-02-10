@@ -15,9 +15,8 @@ authors:
   given-names: "Giovanni"
 - family-names: "Navarro"
   given-names: "Gonzalo"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
 title: "Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests"
 version: 2.0.4
-doi: 10.5281/zenodo.1234
-date-released: 2017-12-18
+#doi: TBD
+date-released: TBD
 url: "https://github.com/draessld/KATKA2/tree/main"
