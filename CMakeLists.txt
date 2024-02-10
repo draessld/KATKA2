@@ -68,12 +68,3 @@ target_link_libraries(${INDEX-LOCATE} "-lsdsl")
 target_link_libraries(${INDEX-LOCATE} "-ldivsufsort")
 target_link_libraries(${INDEX-LOCATE} "-ldivsufsort64")
 target_link_libraries(${INDEX-LOCATE} "-lboost_program_options")
-
-#   KATKA2 dataset generator
-# set(GENERATE_DATASET "generate_dataset")
-# set(GENERATE_DATASET_EXEC "src/utils/KATKA2_build_dataset.c")
-# file(GLOB mtwister_C "src/utils/mtwister.c")
-# file(GLOB mtwister_H "src/utils/mtwister.h")
-# file(GLOB mtwister ${mtwister_C} ${mtwister_H} )
-
-# add_executable(${GENERATE_DATASET} ${GENERATE_DATASET_EXEC} ${mtwister})

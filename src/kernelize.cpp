@@ -9,17 +9,15 @@
 
 namespace po = boost::program_options;
 
-const std::string usageInfoString = "";
-const std::string desc = "";
+const std::string usage = "";
 
 typedef struct Config
 {
     uint32_t k;
-    bool silent = false;
-    bool to_publication = false; // printed with '-' except deleting positions
+    bool to_publication = false; // printed with '-'
     char c = '#';
-    std::filesystem::path output_path;
     std::filesystem::path input_path;
+    std::string pattern;
     std::string suffix = ".krl";
 } Config;
 
@@ -29,17 +27,9 @@ int handle_parameters(int argc, char **argv)
 {
     po::options_description desc("Allowed options");
 
-    desc.add_options()("help", "produce help message")
-    // ("help-verbose", "display verbose help message")
-    // ("silent,s", "silent mode")
-    ("to_publication,p", "printed with '-' except deleting positions")
-    ("kmer_length,k", po::value<uint32_t>(&cfg.k), "kmer, default 0")
-    ("divider,c", po::value<char>(&cfg.c), "instead of gaps keep $ or insert this divider, default #")
-    // ("output-file,o", po::value<std::filesystem::path>(&cfg.output_path), "output file")
-    ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
+    desc.add_options()("help", "produce help message")("to_publication,p", "printed with '-' instead of deleted characters")("kmer_length,k", po::value<uint32_t>(&cfg.k), "k-mer length")("input-sequence,s", po::value<std::string>(&cfg.pattern), "simple sequence input")("divider,c", po::value<char>(&cfg.c), "instead of gaps keep $ or insert this divider, default #")("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
-    posOptions.add("input-file", 1);
     posOptions.add("kmer_length", 1);
 
     po::variables_map vm;
@@ -48,52 +38,29 @@ int handle_parameters(int argc, char **argv)
         po::store(po::command_line_parser(argc, argv).options(desc).positional(posOptions).run(), vm);
         if (vm.count("help"))
         {
-            std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
+            std::cout << "Usage: " << argv[0] << " " << usage << std::endl
                       << std::endl;
             std::cout << desc << std::endl;
 
             return 1;
         }
-        if (vm.count("help-verbose"))
-        {
-            std::cout << desc << std::endl;
-            std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
-                      << std::endl;
-
-            return 1;
-        }
-        // if (vm.count("silent"))
-        // {
-        //     cfg.silent = true;
-        // }
         if (vm.count("to_publication"))
         {
             cfg.to_publication = true;
         }
-        if (vm.count("input-file") == 0)
+        if (vm.count("input-file") == 0 && vm.count("input-sequence") == 0)
         {
-            std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
+            std::cout << "Usage: " << argv[0] << " " << usage << std::endl
                       << std::endl;
             std::cout << desc << std::endl;
 
             return -1;
         }
         po::notify(vm);
-
-        // if (vm.count("basefolder") == 0)
-        // {
-        //     std::ostringstream oss;
-        //     oss << cfg.input_path.parent_path().c_str() << "/" << cfg.input_path.filename().replace_extension("").c_str() << "/"<< cfg.input_path.filename().replace_extension("").c_str() << ".k" << cfg.k << cfg.suffix;
-        //     cfg.output_path = oss.str();
-        //     if (!std::filesystem::exists(cfg.output_path.parent_path()))
-        //     {
-        //         std::filesystem::create_directories(cfg.output_path.parent_path());
-        //     }
-        // }
     }
     catch (const po::error &e)
     {
-        std::cerr << "Usage: " << argv[0] << " " << usageInfoString << std::endl
+        std::cerr << "Usage: " << argv[0] << " " << usage << std::endl
                   << std::endl;
         std::cerr << desc << std::endl;
 
@@ -155,26 +122,36 @@ int string_kernel(std::string &text, unsigned k)
 
     for (size_t i = 0; i < B.size(); i++)
     {
-        if (!B[i] && text[i] != '$' && text[i] !='#'){
+        if (!B[i] && text[i] != '$' && text[i] != '#')
+        {
             if (cfg.to_publication)
             {
                 kernel.push_back('-');
-            }else if (!gap){
+            }
+            else if (!gap)
+            {
                 gap = true;
                 kernel.push_back('#');
-            }                
-        }else{
-            if(kernel.back() == '#' && text[i] == '$'){
+            }
+        }
+        else
+        {
+            if (kernel.back() == '#' && text[i] == '$')
+            {
                 kernel.back() = text[i];
                 if (cfg.to_publication)
-                    kernel.push_back('\n');            
+                    kernel.push_back('\n');
                 gap = true;
-            }else if(text[i] == '$' || text[i] == '#'){
+            }
+            else if (text[i] == '$' || text[i] == '#')
+            {
                 kernel.push_back(text[i]);
                 if (cfg.to_publication)
                     kernel.push_back('\n');
                 gap = true;
-            }else{
+            }
+            else
+            {
                 kernel.push_back(text[i]);
                 gap = false;
             }
@@ -201,54 +178,44 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    //  read
-    std::ifstream in(cfg.input_path, std::ios::binary);
-
-    if (!in)
+    if (!cfg.input_path.empty())
     {
-        std::cout << "ERROR: File " << cfg.input_path << " does not exist. Exit." << std::endl;
-        return 1;
-    }
+        //  read
+        std::ifstream in(cfg.input_path, std::ios::binary);
 
-    // Read the file character by character
-    std::string kernel;
-    // std::string line;
-
-    // while (std::getline(in, line)) {
-    //     kernel += line;
-    // }
-
-        // Read the file character by character
-    char ch;
-    while (in.get(ch)) {
-        // Skip carriage return characters
-        if (ch == '\r' || ch == '\n') {
-            continue;
+        if (!in)
+        {
+            std::cout << "ERROR: File " << cfg.input_path << " does not exist. Exit." << std::endl;
+            return 1;
         }
 
-        // Concatenate non-carriage return characters
-        kernel += ch;
+        // Read the file character by character
+        std::string kernel;
+        // Read the file character by character
+        char ch;
+        while (in.get(ch))
+        {
+            // Skip carriage return characters
+            if (ch == '\r' || ch == '\n')
+            {
+                continue;
+            }
+
+            // Concatenate non-carriage return characters
+            kernel += ch;
+        }
+
+        in.close();
+
+        string_kernel(kernel, cfg.k);
+        std::cout << kernel << std::endl;
     }
 
-    // while (in.get(c))
-    //     kernel.push_back(c);
-
-    in.close();
-
-    string_kernel(kernel, cfg.k);
-    // if (!cfg.silent)
-        std::cout << kernel << std::endl;
-
-    // std::ofstream out(cfg.output_path, std::ios::binary);
-
-    // if (!out.is_open())
-    // {
-    //     std::cout << "ERROR: File " << cfg.output_path << " cannot be openned. Exit." << std::endl;
-    //     return 1;
-    // }
-
-    // out << kernel;
-    // out.close();
+    if (!cfg.pattern.empty())
+    {
+        string_kernel(cfg.pattern, cfg.k);
+        std::cout << cfg.pattern << std::endl;
+    }
 
     return 0;
 }

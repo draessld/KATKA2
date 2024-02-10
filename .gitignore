@@ -2,6 +2,7 @@ build/**
 other/**
 src/tests/**
 experiments/**
+notes.md
 
 #   exclude
 !src/tests/test.txt

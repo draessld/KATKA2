@@ -7,15 +7,11 @@
 
 namespace po = boost::program_options;
 
-const std::string usageInfoString = "";
-const std::string desc = "";
+const std::string usage = "";
 
 typedef struct Config
 {
     int w;
-    bool printable = false;
-    bool silent = false;
-    std::filesystem::path output_path;
     std::filesystem::path input_path;
     std::string suffix = ".dgt";
     std::string pattern;
@@ -28,11 +24,7 @@ int handle_parameters(int argc, char **argv)
 {
     po::options_description desc("Allowed options");
 
-    desc.add_options()("help", "produce help message")
-    ("printable,p", "to see hashed values")
-    ("window_size,w", po::value<int>(&cfg.w), "lookahead window size")
-    ("input,s", po::value<std::string>(&cfg.pattern), "print occurences of every pattern")
-    ("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
+    desc.add_options()("help", "produce help message")("window_size,w", po::value<int>(&cfg.w), "lookahead window size")("input-sequence,s", po::value<std::string>(&cfg.pattern), "simple sequence input")("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
     posOptions.add("window_size", 1);
@@ -43,37 +35,25 @@ int handle_parameters(int argc, char **argv)
         po::store(po::command_line_parser(argc, argv).options(desc).positional(posOptions).run(), vm);
         if (vm.count("help"))
         {
-            std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
+            std::cout << "Usage: " << argv[0] << " " << usage << std::endl
                       << std::endl;
             std::cout << desc << std::endl;
 
             return 1;
         }
-        if (vm.count("printable"))
-        {
-            cfg.printable = true;
-        }
-        if (vm.count("help-verbose"))
-        {
-            std::cout << desc << std::endl;
-            std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
-                      << std::endl;
-
-            return 1;
-        }
-        // if (vm.count("input-file") == 0)
-        // {
-        //     std::cout << "Usage: " << argv[0] << " " << usageInfoString << std::endl
-        //               << std::endl;
-        //     std::cout << desc << std::endl;
-
-        //     return -1;
-        // }
         po::notify(vm);
+        if (vm.count("input-file") == 0 && vm.count("input-sequence") == 0)
+        {
+            std::cout << "Usage: " << argv[0] << " " << usage << std::endl
+                      << std::endl;
+            std::cout << desc << std::endl;
+
+            return -1;
+        }
     }
     catch (const po::error &e)
     {
-        std::cerr << "Usage: " << argv[0] << " " << usageInfoString << std::endl
+        std::cerr << "Usage: " << argv[0] << " " << usage << std::endl
                   << std::endl;
         std::cerr << desc << std::endl;
 
@@ -138,54 +118,55 @@ int triple2int(char a, char b, char c)
 int minimizer_digest(std::string &text, unsigned w)
 {
     sdsl::bit_vector B(text.size(), 0);
-	int *H = new int[text.size()];
+    int *H = new int[text.size()];
 
-    for (size_t i = 0; i <= text.size()-3; i++) {
-        // std::cout << text[i]<< text[i+1]<< text[i+2] << ":" << (triple2int(text[i],text[i+1],text[i+2])+37) << std::endl;
-		H[i] = hash_function(triple2int(text[i],text[i+1],text[i+2]));
+    for (size_t i = 0; i <= text.size() - 3; i++)
+    {
+        H[i] = hash_function(triple2int(text[i], text[i + 1], text[i + 2]));
     }
 
-    if (text.size() >= (w+2))
-    {    
-	    for (size_t i = 0; i <= (text.size()-2-w); i++) {
-                if (text[i+1+w] == '$' || text[i+w+1] == '#')
+    if (text.size() >= (w + 2))
+    {
+        for (size_t i = 0; i <= (text.size() - 2 - w); i++)
+        {
+            if (text[i + 1 + w] == '$' || text[i + w + 1] == '#')
+            {
+                i += (1 + w);
+                continue;
+            }
+
+            int minVal = H[i];
+            int minPos = i;
+            for (size_t k = 1; k < w; k++)
+            {
+                if (H[i + k] < minVal)
                 {
-                    i += (1+w);
-                    continue;   
+                    minVal = H[i + k];
+                    minPos = i + k;
                 }
-    
-	    		int minVal = H[i];
-	    		int minPos = i;
-	    		for (size_t k = 1; k < w; k++) {
-	    			if (H [i+k] < minVal ) {
-	    				minVal = H [i+k];
-	    				minPos = i+k;
-	    			}
-	    		}
-	    		B[minPos] = 1;
-	    }
+            }
+            B[minPos] = 1;
+        }
     }
-    // std::cout << B << std::endl;
 
     std::string digest;
 
     for (size_t i = 0; i < B.size(); i++)
     {
-        if (text[i+2] == '$' || text[i+2] == '#'){
-            digest.push_back(text[i+2]);
-            // i+=(w);
+        if (text[i + 2] == '$' || text[i + 2] == '#')
+        {
+            digest.push_back(text[i + 2]);
             continue;
         }
-        if (B[i]){
-            digest.push_back((char)(triple2int(text[i],text[i+1],text[i+2])+37));
+        if (B[i])
+        {
+            digest.push_back((char)(triple2int(text[i], text[i + 1], text[i + 2]) + 37));
         }
-            
     }
 
     text = digest;
     return 0;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -202,14 +183,21 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    if(!cfg.input_path.empty()){
+    if (!cfg.input_path.empty())
+    {
         std::string digest;
         std::ifstream in(cfg.input_path, std::ios::binary);
+        if (!in)
+        {
+            std::cout << "ERROR: File " << cfg.input_path << " does not exist. Exit." << std::endl;
+            return 1;
+        }
+
         char c;
 
         while (in.get(c))
         {
-            if (c == '\t' || c=='\n')
+            if (c == '\t' || c == '\n')
                 continue;
             digest.push_back(c);
             if (!in)
@@ -223,17 +211,11 @@ int main(int argc, char **argv)
         std::cout << digest << std::endl;
     }
 
-    if(!cfg.pattern.empty()){
+    if (!cfg.pattern.empty())
+    {
         minimizer_digest(cfg.pattern, cfg.w);
         std::cout << cfg.pattern << std::endl;
     }
-
-    
-
-
-
-    // minimizer_digest(digest, cfg.w);
-    // std::cout << digest << std::endl;
 
     return 0;
 }
