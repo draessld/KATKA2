@@ -1,7 +1,7 @@
-cff-version: 1.0.0
+cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: "Draesslerov\'a"
+- family-names: "Draesslerova"
   given-names: "Dominika"
 - family-names: "Ahmed"
   given-names: "Omar"
@@ -18,6 +18,6 @@ authors:
     # orcid: "https://orcid.org/0000-0000-0000-0000"
 title: "Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests"
 version: 2.0.4
-# doi: 10.5281/zenodo.1234
-# date-released: 2017-12-18
+doi: 10.5281/zenodo.1234
+date-released: 2017-12-18
 url: "https://github.com/draessld/KATKA2/tree/main"
