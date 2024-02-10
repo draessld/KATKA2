@@ -1,7 +1,8 @@
 # MEM finding tool for metagenomic classification
 
 ##  Brief description
-Software for finding the **leftmost** and the **rightmost** positions of every MEM relative to the pattern described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*
+Software for finding the **leftmost** and the **rightmost** positions of each MEMs of the read
+with respect to the text described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*
 
 
 Implementation takes **input** as simple string or concatenation on strings divided with $.
