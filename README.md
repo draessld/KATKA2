@@ -70,6 +70,6 @@ to digest simple pattern
 **Note:** So far, parameter k for minimizers is static k=3
 
 ##  Experiments
-Experiments settled in the article were runned over the SILVA dataset available [here](https://www.arb-silva.de/download/arb-files/). 1000 samples were taken in range 1100-2099 from total 9118 reference files. Main result of the project is described within the following graph.
+Experiments described in the article were run over the SILVA dataset, available [here](https://www.arb-silva.de/download/arb-files/). 1000 samples were taken in range 1100-2099 from total 9118 reference files. Main result of the project is described within the following graph.
 
 ![graph](1000genomes_simulated_error_rate_1p_w_lines.png?raw=true "Title")
