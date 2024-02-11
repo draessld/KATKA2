@@ -5,7 +5,7 @@ Software for finding the **leftmost** and the **rightmost** positions of each ME
 with respect to the text described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*
 
 
-Implementation takes **input** as simple string or a concatenation of strings divided with $ character.
+Implementation takes **input** as a simple string or a concatenation of strings divided with $ character.
 ```
 GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA
 ```
@@ -71,6 +71,5 @@ to digest simple pattern
 **Note:** So far, parameter k for minimizers is static k=3
 
 ##  Experiments
-Experiments described in the article were run over the SILVA dataset, available [here](https://www.arb-silva.de/download/arb-files/). 1000 samples were taken in range 1100-2099 from total 9118 reference files. Main result of the project is described within the following graph.
-
+Experiments described in the article were run over the SILVA dataset, available [here](https://www.arb-silva.de/download/arb-files/). [1000](genera_from_1100_to_2100.txt) samples were taken in range 1100-2100 from total 9118 reference files. Main result of the project is described within the following graph. 
 ![graph](1000genomes_simulated_error_rate_1p_w_lines.png?raw=true "Title")
