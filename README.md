@@ -1,4 +1,4 @@
-# MEM finding tool for metagenomic classification
+# MEM finding tool for taxonomic classification
 
 ##  Brief description
 Software for finding the **leftmost** and the **rightmost** positions of each MEMs of the read
