@@ -17,6 +17,6 @@ authors:
   given-names: "Gonzalo"
 title: "Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests"
 version: 1.0.0
-doi: TBD
-date-released: TBD
+doi: 10.4230/LIPIcs.SEA.2024.10
+date-released: 2024-07-11
 url: "https://github.com/draessld/KATKA2/tree/main"
