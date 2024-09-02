@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wno-long-long -pedantic -std=c++17 -O3 -rdynamic CMakeFiles/build.dir/build.cpp.o CMakeFiles/build.dir/index/index.cpp.o -o build   -L/home/draesdom/lib  -Wl,-rpath,/home/draesdom/lib -lsdsl -ldivsufsort -ldivsufsort64 -lboost_program_options 
