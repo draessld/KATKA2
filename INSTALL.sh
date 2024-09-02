@@ -44,12 +44,33 @@ cat <<EOL > configure.json
         "find_exe": "$BASE_DIR/scripts/build/find",
         "kernelize_exe": "$BASE_DIR/scripts/build/kernelize",
         "minimize_exe": "$BASE_DIR/scripts/build/minimize"
+        "minimize_pattern_exe": "$BASE_DIR/scripts/build/minimize_pattern"
     }
 }
 EOL
 
-# 7. Provide alias instructions
-echo "To use the alias 'katka2', add the following line to your shell configuration file (.bashrc, .zshrc, etc.):"
-echo "alias katka2=\"python $BASE_DIR/run.py\""
+ALIAS_NAME="katka2"
+ALIAS_COMMAND="python3 $BASE_DIR/run.py"
 
-echo "Project setup, alias creation, and tests completed successfully!"
+# File to modify
+BASH_ALIASES_FILE="$HOME/.bash_aliases"
+
+if [ ! -f "$BASH_ALIASES_FILE" ]; then
+  touch "$BASH_ALIASES_FILE"
+  echo "$BASH_ALIASES_FILE created."
+fi
+
+# Check if the alias already exists in ~/.bash_aliases
+if grep -q "alias $ALIAS_NAME=" "$BASH_ALIASES_FILE" 2>/dev/null; then
+  # If found, replace the existing alias
+  sed -i "s|alias $ALIAS_NAME=.*|alias $ALIAS_NAME='$ALIAS_COMMAND'|" "$BASH_ALIASES_FILE"
+  echo "Alias '$ALIAS_NAME' replaced in $BASH_ALIASES_FILE"
+  unalias $ALIAS_NAME
+  alias $ALIAS_NAME=" "$BASH_ALIASES_FILE"
+else
+  # If not found, add the new alias
+  echo "alias $ALIAS_NAME='$ALIAS_COMMAND'" >> "$BASH_ALIASES_FILE"
+  echo "Alias '$ALIAS_NAME' added to $BASH_ALIASES_FILE"
+fi
+
+source ~/.bashrc

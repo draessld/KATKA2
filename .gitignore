@@ -1,11 +1,2 @@
-build/**
-other/**
-src/tests/**
-experiments/**
-notes.md
-
-#   exclude
-!src/tests/test.txt
-!src/tests/test.pattern
-!src/tests/yeast.txt
-!src/tests/yeast.pattern
+./scripts/build/**
+configuration.json

@@ -7,7 +7,7 @@
 
 #define q INT_MAX //  alphabet size with # and $ and N 
 #define base CHAR_MAX
-size_t sigma = 5;
+size_t sigma = 4;
 uint8_t bits;
 uint8_t bytes;
 uint8_t bits_per_byte;
@@ -34,116 +34,14 @@ int mmer2int(const string &str, size_t m){
         case 'G':
             sum += 3*add;
             break;
-        case 'T':
-            sum += 4*add;
-            break;
+        // case 'T':
+        //     sum += 4*add;
+        //     break;
         }
         add *= sigma;
     }
     return sum;
 }
-
-/*
-int triple2int(char a, char b, char c)
-{
-    int sum = 0;
-
-    switch (a)
-    {
-    case 'C':
-        sum = 1;
-        break;
-    case 'G':
-        sum = 2;
-        break;
-    case 'T':
-        sum = 3;
-        break;
-    }
-
-    switch (b)
-    {
-    case 'C':
-        sum += 4;
-        break;
-    case 'G':
-        sum += 8;
-        break;
-    case 'T':
-        sum += 12;
-        break;
-    }
-
-    switch (c)
-    {
-    case 'C':
-        sum += 16;
-        break;
-    case 'G':
-        sum += 32;
-        break;
-    case 'T':
-        sum += 48;
-        break;
-    }
-
-    return (sum);
-}
-int minimizer_digest(std::string &text, unsigned w)
-{
-    sdsl::bit_vector B(text.size(), 0);
-    int *H = new int[text.size()];
-
-    for (size_t i = 0; i <= text.size() - 3; i++)
-    {
-        H[i] = hash_function(triple2int(text[i], text[i + 1], text[i + 2]));
-        cout << text.substr(i,3) << ":" << triple2int(text[i], text[i + 1], text[i + 2]) << ',' << H[i] <<  endl;
-    }
-
-    if (text.size() >= (w + 2))
-    {
-        for (size_t i = 0; i <= (text.size() - 2 - w); i++)
-        {
-            if (text[i + 1 + w] == '$' || text[i + w + 1] == '#')
-            {
-                i += (1 + w);
-                continue;
-            }
-
-            int minVal = H[i];
-            int minPos = i;
-            for (size_t k = 1; k < w; k++)
-            {
-                if (H[i + k] < minVal)
-                {
-                    minVal = H[i + k];
-                    minPos = i + k;
-                }
-            }
-            B[minPos] = 1;
-        }
-    }
-    cout << B <<endl;
-
-    std::string digest;
-
-    for (size_t i = 0; i < B.size(); i++)
-    {
-        if (text[i + 2] == '$' || text[i + 2] == '#')
-        {
-            digest.push_back(text[i + 2]);
-            continue;
-        }
-        if (B[i])
-        {
-            digest.push_back((char)(triple2int(text[i], text[i + 1], text[i + 2]) + 37));
-        }
-    }
-
-    cout << digest << endl;
-    return 0;
-}
-*/
 
 int minimizer_digest(const string &text, size_t m, size_t w)
 {
@@ -195,6 +93,9 @@ int minimizer_digest(const string &text, size_t m, size_t w)
             digest.push_back(text[i + m - 1]);
             continue;
         }
+        // else{
+        //     digest.push_back(' ');
+        // }
         if (B[i])
         {
             h = mmer2int(text.substr(i,m),m);
@@ -208,6 +109,9 @@ int minimizer_digest(const string &text, size_t m, size_t w)
             }
             // cout <<endl;
         }
+        // else{
+        //     digest.push_back(' ');
+        // }
     }
 
     cout << digest <<endl;
@@ -217,7 +121,6 @@ int minimizer_digest(const string &text, size_t m, size_t w)
 // unsigned int bytes_required(unsigned int m) {
 //     return ceil((m*log2(4)+6)/8);
 // }
-
 unsigned int bits_required(unsigned int m, unsigned int b) {// b is an alphabet size
     // cout <<"max int: "<< pow(b,m+1)-1 << endl;
     // cout <<"bits: "<< ceil(log2(pow(b,m+1)-1)) << endl;
@@ -236,8 +139,8 @@ int main(int argc, char **argv)
     //  get number of bytes required to represent all 
     // unsigned combinations = pow(5,m);
 
-    bits = bits_required(m-1,sigma);
-    bytes = ceil((double)bits/8);
+    bits = bits_required(m-1,sigma); //15625
+    bytes = ceil((double)bits/7);
     bits_per_byte = bits / bytes;
     // cout << "characters per w: " << (int)bytes << endl;
     string input = argv[3];

@@ -5,8 +5,8 @@ include(CTest)
 enable_testing()
 
 
-set(CMAKE_BUILD_TYPE Release)
-# set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../../exe/")
 
 # ############################################################

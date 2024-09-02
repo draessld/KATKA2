@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -Wno-long-long -pedantic -std=c++17 -O3 -rdynamic CMakeFiles/minimize.dir/minimize.cpp.o -o minimize   -L/home/draesdom/lib  -Wl,-rpath,/home/draesdom/lib -lsdsl -ldivsufsort -ldivsufsort64 -lboost_program_options 
