@@ -83,7 +83,7 @@ int minimizer_digest(const string &text, size_t m, size_t w)
         }
     }
 
-    std::string digest;
+    string digest;
     uint8_t byte;
 
     for (i = 0; i < B.size(); i++)
@@ -103,7 +103,7 @@ int minimizer_digest(const string &text, size_t m, size_t w)
             for (size_t i = 0; i < bytes; ++i) {
                 // byte = (h >> (8 * i)) & 0xFF;
                 byte = (h >> (bits - (i + 1) * bits_per_byte)) & ((1 << bits_per_byte) - 1);
-                // cout << std::bitset<8>(byte+37) << " "<<int(byte+37)<< ',';
+                // cout << bitset<8>(byte+37) << " "<<int(byte+37)<< ',';
                 // if(byte != 0)
                 digest.push_back(byte+37);
             }
@@ -129,8 +129,9 @@ unsigned int bits_required(unsigned int m, unsigned int b) {// b is an alphabet 
 
 int main(int argc, char **argv)
 {
-    int m = atoi(argv[1]);
-    int w = atoi(argv[2]);
+    uint m = atoi(argv[1]);
+    uint w = atoi(argv[2]);
+    string input = argv[3];
 
     if (m<=0 || w <= 0 || m>w){
         cout << "parameters has to be non-zero positive values and holds m<w";
@@ -143,8 +144,49 @@ int main(int argc, char **argv)
     bytes = ceil((double)bits/7);
     bits_per_byte = bits / bytes;
     // cout << "characters per w: " << (int)bytes << endl;
-    string input = argv[3];
 
-    minimizer_digest(input,m,w);
+    try
+    {
+        ifstream inf(input, ios::binary);
+        if (!inf)
+        {
+            minimizer_digest(input,m,w);
+        }else{
+            inf.seekg(0, std::ios::end);
+            size_t size = inf.tellg();
+            std::string buffer(size, ' ');
+            inf.seekg(0);
+            inf.read(&buffer[0], size); 
+            minimizer_digest(buffer,m,w);
+            inf.close();
+        }
+    }
+    catch(const exception& e)
+    {
+        cerr << e.what() << '\n';
+    }
+    
     return 0;
 }
+
+// int main(int argc, char **argv)
+// {
+//     int m = atoi(argv[1]);
+//     int w = atoi(argv[2]);
+
+//     if (m<=0 || w <= 0 || m>w){
+//         cout << "parameters has to be non-zero positive values and holds m<w";
+//         return -1;
+//     }
+//     //  get number of bytes required to represent all 
+//     // unsigned combinations = pow(5,m);
+
+//     bits = bits_required(m-1,sigma); //15625
+//     bytes = ceil((double)bits/7);
+//     bits_per_byte = bits / bytes;
+//     // cout << "characters per w: " << (int)bytes << endl;
+//     string input = argv[3];
+
+//     minimizer_digest(input,m,w);
+//     return 0;
+// }

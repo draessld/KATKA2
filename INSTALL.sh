@@ -44,7 +44,6 @@ cat <<EOL > configure.json
         "find_exe": "$BASE_DIR/scripts/build/find",
         "kernelize_exe": "$BASE_DIR/scripts/build/kernelize",
         "minimize_exe": "$BASE_DIR/scripts/build/minimize"
-        "minimize_pattern_exe": "$BASE_DIR/scripts/build/minimize_pattern"
     }
 }
 EOL
@@ -66,7 +65,7 @@ if grep -q "alias $ALIAS_NAME=" "$BASH_ALIASES_FILE" 2>/dev/null; then
   sed -i "s|alias $ALIAS_NAME=.*|alias $ALIAS_NAME='$ALIAS_COMMAND'|" "$BASH_ALIASES_FILE"
   echo "Alias '$ALIAS_NAME' replaced in $BASH_ALIASES_FILE"
   unalias $ALIAS_NAME
-  alias $ALIAS_NAME=" "$BASH_ALIASES_FILE"
+  alias $ALIAS_NAME="$ALIAS_COMMAND"
 else
   # If not found, add the new alias
   echo "alias $ALIAS_NAME='$ALIAS_COMMAND'" >> "$BASH_ALIASES_FILE"

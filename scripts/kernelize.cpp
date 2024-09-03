@@ -75,7 +75,8 @@ int string_kernel(string &text, unsigned k)
         }
     }
 
-    text = kernel;
+    // text = kernel;
+    cout << kernel;
 
     return 0;
 }
@@ -85,8 +86,32 @@ int main(int argc, char **argv)
     int k = atoi(argv[1]);
     string input = argv[2];
 
-    string_kernel(input, k);
-        cout << input;
+    try
+    {
+        ifstream inf(input, ios::binary);
+        if (!inf)
+        {
+            string_kernel(input,k);
+        }else{
+            inf.seekg(0, std::ios::end);
+            size_t size = inf.tellg();
+            std::string buffer(size, ' ');
+            inf.seekg(0);
+            inf.read(&buffer[0], size); 
+            string_kernel(buffer,k);
+            inf.close();
+        }
+    }
+    catch(const exception& e)
+    {
+        cerr << e.what() << '\n';
+    }
+    
+    return 0;
+
+
+    // string_kernel(input, k);
+        // cout << input;
 
     return 0;
 }

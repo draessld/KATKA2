@@ -15,6 +15,7 @@ import shutil
 import glob
 import re
 import math
+import datetime
 
 #   TODO
 #       pipelining commands??
@@ -62,11 +63,10 @@ def get_longest_lr_mem(func):
         return output
     return wrapper
 
-@setup
 def build(*args, **kwargs):
     """ Build index """
     files = args[0]
-    executable_path = kwargs["cpp_exe"]["build_exe"]
+    executable_path = get_exe("build_exe")
     for file in files:
         index_dir = file+'.index'
         print("Building",file,index_dir)
@@ -75,14 +75,13 @@ def build(*args, **kwargs):
         yield out.decode(),index_dir
         # yield "out",index_dir
 
-@setup
 def find(*args, **kwargs):
     """ Find MEM tables """
     index = args[0]
     all = args[1]
     pattern = args[2]
     try:
-        executable_path = kwargs["cpp_exe"]["find_exe"]
+        executable_path = get_exe("find_exe")
         if os.path.exists(executable_path) and os.access(executable_path, os.X_OK):
             p = subprocess.Popen([executable_path,index,str(all),pattern], stdout=subprocess.PIPE)
             out, err = p.communicate()
@@ -122,11 +121,24 @@ def minimize_files(*args, **kwargs):
     for file in files:
         out_file=file+f'_m{m}_w{w}'
         out_files.append(out_file)
-        try:    
-            with open(file,'rb') as f:
-                p = subprocess.run([executable_path,m,w,f.read()], stdout=open(out_file,'wb'),stderr=subprocess.PIPE)
-        except Exception as e:
-            raise Exception(f'Error during minimization')
+        if not os.path.exists(out_file) or kwargs['rebuild']:
+            try:
+                if kwargs['line_parse']:
+                    a = datetime.datetime.now()
+                    with open(file,'r') as f:
+                        for line in f.readlines():
+                            p = subprocess.run([executable_path,m,w,line], stdout=open(out_file,'a'),stderr=subprocess.PIPE)
+                    b = datetime.datetime.now()
+                    c = b - a
+                    print(f">Minimize_all_lines file:{file}\tm:{m}\tw:{w}\ttime:{c.microseconds}")
+                else:
+                    a = datetime.datetime.now()
+                    p = subprocess.run([executable_path,m,w,file], stdout=open(out_file,'w'),stderr=subprocess.PIPE)
+                    b = datetime.datetime.now()
+                    c = b - a
+                    print(f">Minimize m:{m}\tw:{w}\ttime:{c.microseconds}")
+            except Exception as e:
+                raise Exception(f'Error during minimization')
 
     return out_files
 
@@ -144,6 +156,53 @@ def get_compression_ratio(original,original_bits,compressed,compressed_bits):
 def get_alphabet(seq):
     return len(set(seq))
 
+def minimize(*args, **kwargs):
+    ''' For given list of files and lit of sequences minimize every file and seuqence with parameters m and window size w'''
+    m = str(kwargs['m'])
+    w = str(kwargs['w'])
+    files = kwargs['files']
+    sequences = kwargs['sequences']
+    line_parse = kwargs['line_parse']
+    rebuild = kwargs['rebuild']
+
+    executable_path = get_exe("minimize_exe")
+    if not os.path.exists(executable_path) or  not os.access(executable_path, os.X_OK):
+        raise Exception("Unable to find executable: {executable_path}")
+    
+    out_files = list()
+    try:
+        for i,file in enumerate(files):
+            out_file=file+f'_m{m}_w{w}'
+            if not os.path.exists(out_file) or rebuild:
+                a = datetime.datetime.now()
+                if line_parse:
+                    with open(file,'r') as f:
+                        for line in f.readlines():
+                            subprocess.run([executable_path,m,w,line], stdout=open(out_file,'a'),stderr=subprocess.PIPE)
+                else:
+                    subprocess.run([executable_path,m,w,file], stdout=open(out_file,'w'),stderr=subprocess.PIPE)
+                b = datetime.datetime.now()
+                print(f">Minimized file:{file}\tm:{m}\tw:{w}\ttime:{(b - a).microseconds}")
+                print(out_file)
+            out_files.append(out_file)
+
+        for i,sequence in enumerate(sequences):
+            a = datetime.datetime.now()
+            p = subprocess.run([executable_path,m,w,sequence],capture_output = True, text = True)
+            out = p.stdout
+            b = datetime.datetime.now()
+            sigma = get_alphabet(sequence)
+            bytes = count_bytes(int(m),sigma)
+            compression_ratio = get_compression_ratio(sequence,math.ceil(math.log2(sigma)),out,8)
+            stat = sequence if len(sequence) < 50 else sequence[:50]+'...' 
+            print(f'>Minimized sequence:{stat}\tm:{m}\tw:{w}\ttime:{(b - a).microseconds}c/mmer:{str(bytes)}\tcr:{compression_ratio}')
+            print(out)
+
+    except Exception as e:
+        raise Exception(f'Error during minimization')
+    
+    return out_files
+
 def minimize_sequences(*args, **kwargs):
     """ create minimized version of data, save entry with parameters on special output folder """
     sequences = args[0]
@@ -154,7 +213,7 @@ def minimize_sequences(*args, **kwargs):
     if not os.path.exists(executable_path) or  not os.access(executable_path, os.X_OK):
         raise Exception("Unable to find executable: {executable_path}")
         
-    out_files = list()
+    out_file = None
     for i,seq in enumerate(sequences):
         try:    
             p = subprocess.run([executable_path,m,w,seq],capture_output = True, text = True)
@@ -162,10 +221,17 @@ def minimize_sequences(*args, **kwargs):
             sigma = get_alphabet(seq)
             bytes = count_bytes(int(m),sigma)
             compression_ratio = get_compression_ratio(seq,math.ceil(math.log2(sigma)),out,8)
-            print(f'>seq{i}\tm:{m}\tw:{w}\t c/mmer:{str(bytes)}\t cr:{compression_ratio}')
+            stat = ''
+            if len(seq) > 50:
+                stat = seq[:50]+'...'
+            else:
+                stat = seq
+            print(f'>{stat}\tm:{m}\tw:{w}\t c/mmer:{str(bytes)}\t cr:{compression_ratio}')
             print(out)
         except Exception as e:
             raise Exception(f'Error during minimization')
+        
+    return out_file
 
 def kernelize_file(*args, **kwargs):
     """ create katka kernel of base data, save entry with parameters on special output folder """
@@ -180,11 +246,15 @@ def kernelize_file(*args, **kwargs):
     for file in files:
         out_file = file+f'_k{k}'
         out_files.append(out_file)
-        try:    
-            with open(file,'r') as f:
-                p = subprocess.run([executable_path,k,f.read()], stdout=open(out_file,'wb'),stderr=subprocess.PIPE)
-        except Exception as e:
-            raise Exception(f'Error during kernelization') # problem with decoding minimization
+        if not os.path.exists(out_file):
+            try:    
+                a = datetime.datetime.now()
+                p = subprocess.run([executable_path,k,file], stdout=open(out_file,'wb'),stderr=subprocess.PIPE)
+                b = datetime.datetime.now()
+                c = b - a
+                print(f">Kernelize k:\tk:{k}\ttime:{c.microseconds}")
+            except Exception as e:
+                raise Exception(f'Error during kernelization') # problem with decoding minimization
 
     return out_files
 
@@ -398,13 +468,26 @@ def parse_range(value):
     except Exception as e:
         raise argparse.ArgumentTypeError(f"Invalid input: {value}. Must be a single number or a range in the format 'start-end'.")
 
-@setup
 def get_base_file(*args,**kwargs):
     return kwargs["configure"]["base_file"]
 
 def list_indices(*args, **kwargs):
     for index in indices():
         print(index)
+
+def parse_inputs(inputs):
+    files = list()
+    sequences = list()
+    for input in inputs:
+        try:
+            out = subprocess.run([f'find {input} -type f'], capture_output = True, text = True, shell=True).stdout
+            if out == '':
+                sequences.append(input)
+            else:
+                files += out.split('\n')[:-1]
+        except Exception as e:
+            raise Exception(f"Input parsing unsucessful due to {e}")
+    return sequences,files
 
 def main():
     #   parse arguments
@@ -430,14 +513,18 @@ def main():
     parser_minimize = subparsers.add_parser("minimize", help="digest original text with minimizers")
     parser_minimize.add_argument("-m", type=parse_range, help="kernel size (5 - 30), can be given range in format a-b-c as from a to b by c steps")
     parser_minimize.add_argument("-w", type=parse_range, help="minimizer window size (10 - 50), can be given range in format a-b-c as from a to b by c steps")
-    parser_minimize.add_argument("-I", type=str, help="input file")
-    parser_minimize.add_argument("-i", nargs='+',type=str, help="string to minimize")
+    parser_minimize.add_argument("inputs", nargs='+', type=str, help="input in format of set of sequences, set of files or folder that contains given original files")
+    # parser_minimize.add_argument("-I", type=str, help="input path - accepts file or a folder. in case of folder minimize all available files in the folder")
+    # parser_minimize.add_argument("-i", nargs='+',type=str, help="string to minimize")
+    parser_minimize.add_argument("--line_parse", required=False, default=False, action='store_true', help="minimize every single line in the file individualy")
+    parser_minimize.add_argument("--rebuild", required=False, default=False, action='store_true', help="if minimized file already exists, it will be replaced by the new one")
 
     # Kernelize command
     parser_kernelize = subparsers.add_parser("kernelize", help="From original file create its KATKA kernel")
     parser_kernelize.add_argument("-k", type=parse_range, help="k-mer length (5 - 500),can be given range in format a-b-c as from a to b by c steps")
-    parser_kernelize.add_argument("-I", type=str, help="input file")
+    parser_kernelize.add_argument("-I", type=str, help="input path - accepts file or a folder. in case of folder minimize all available files in the folder")
     parser_kernelize.add_argument("-i", nargs='+',type=str, help="string to kernelize")
+    # parser_minimize.add_argument("--line_parse", required=False, default=False, action='store_true', help="minimize every single line in the file individualy")
     
 
     # List command
@@ -448,17 +535,18 @@ def main():
     parser_build.add_argument("-m", type=parse_range, required = False, default = list(), help="kernel size (5 - 30), can be given range in format a-b-c as from a to b by c steps")
     parser_build.add_argument("-w", type=parse_range, required = False, default = list(), help="minimizer window size (10 - 50), can be given range in format a-b-c as from a to b by c steps")
     parser_build.add_argument("-k", type=parse_range, required = False, default = list(), help="k-mer length (5 - 500),can be given range in format a-b-c as from a to b by c steps")
-    parser_build.add_argument("-I", type=str, required=False , help="path to the file")
+    parser_build.add_argument("-I", type=str, required=True , help="path to the file")
+    parser_build.add_argument("--rebuild", required=False, default=False, action='store_true', help="if minimized file already exists, it will be replaced by the new one")
 
     # find command
-    parser_find = subparsers.add_parser("find", help="For every pattern returns the best leaf match (longest singleton MEM)")
+    parser_find = subparsers.add_parser("find_leaf", help="For every pattern returns the best leaf match (longest singleton MEM)")
     parser_find.add_argument("index", type=str, help="path to the index directory")
     parser_find.add_argument("patterns", nargs='+', type=str, help="Single pattern or a pattern file (one pattern per line)")
 
     # findall command
-    parser_findall = subparsers.add_parser("findall", help="find MEMs of given patterns with respect to the tree data")
-    parser_findall.add_argument("index", type=str, help="path to the index directory")
-    parser_findall.add_argument("patterns", nargs='+', type=str, help="Single pattern or a pattern file (one pattern per line)")
+    find_mems = subparsers.add_parser("find_mems", help="find MEMs of given patterns with respect to the tree data")
+    find_mems.add_argument("index", type=str, help="path to the index directory")
+    find_mems.add_argument("patterns", nargs='+', type=str, help="Single pattern or a pattern file (one pattern per line)")
 
     # clasify command
     parser_find = subparsers.add_parser("clasify", help="find MEMs of given patterns with respect to the tree data")
@@ -495,54 +583,37 @@ def main():
             for k in args.k:
                 out_files = kernelize_file(files,k)   
                 print(out_files)
-
-    elif args.command == "findall":
+    elif args.command == "find_mems":
         for pattern in patterns(args.patterns):
             out = find(args.index,1,pattern)
             print(out)
-    elif args.command == "find":
+    elif args.command == "find_leaf":
         for pattern in patterns(args.patterns):
             out = find(args.index,0,pattern)
             print(out) 
-    elif args.command == "minimize":
-        if args.i:
-            #   minimize sequence given on input
-            for m in args.m:
-                for w in args.w:
-                    if m<w:
-                        # print(f"sequence: {args.i} will be minimized with parameters m:{args.m} w:{args.w}")
-                        minimize_sequences(args.i,m,w)
-        elif args.I:
-            if not os.path.exists(args.I):
-                raise FileNotFoundError(f"Given input wasnt found on {args.I}")
-            files = [args.I]
-            for m in args.m:
-                for w in args.w:
-                    if m<w:
-                        out_files = minimize_files(files,m,w)   
-                        print(out_files)
-        else:
-            files = [get_base_file()]
-            for m in args.m:
-                for w in args.w:
-                    if m<w:
-                        out_files = minimize_files(files,m,w)   
-                        print(out_files)
 
+    elif args.command == "minimize":
+        sequences,files = parse_inputs(args.inputs)
+        #   minimize sequence given on input
+        for m in args.m:
+            for w in args.w:
+                if m<w:
+                    out_files = minimize(files = files, sequences = sequences,m=m,w=w,line_parse=args.line_parse, rebuild=args.rebuild)
+ 
     elif args.command == "build":
-        files = [get_base_file()]
+        files=[args.I]
         min_files = list()
         for m in args.m:
             for w in args.w:
                 if m<w:
-                    min_files += minimize_files(files,m,w)        
+                    min_files += minimize_files(files,m,w,rebuild=args.rebuild)        
 
         if min_files != list():
             files = min_files
 
         ker_files = list()
         for k in args.k:
-            ker_files += kernelize(files,k)
+            ker_files += kernelize_file(files,k,rebuild=args.rebuild)
 
         if ker_files != list():
             files = ker_files
