@@ -33,7 +33,7 @@ void Index::build(std::filesystem::path input, std::filesystem::path output)
     sdsl::util::assign(rmq_sa_max, sdsl::rmq_succinct_sct<false>(&tmp_csa));
     sdsl::store_to_file(rmq_sa_max, output.replace_extension(".rmq_max"));
 
-    std::cout << "RMQmax" << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
+    std::cout << "RMQmax:" << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime).count() << "um" << std::endl;
     startTime = std::chrono::high_resolution_clock::now();
 
     //  build RMinQ SA support
