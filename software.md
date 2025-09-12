@@ -9,10 +9,18 @@ Date of publication: 8.3.2024
 Authors and contributors (including affiliation, ORCID, contact of at least one contact point):
 Dominika Draesslerová
 · Czech Technical University in Prague, Czech Republic, 0009-0006-6304-597X, draesdom@cvut.cz
+Omar Ahmed
+· Johns Hopkins University, Baltimore, MD, USA
 Travis Gagie
 · CeBiB & Dalhousie University, Halifax, Canada, 0000-0003-3689-327X
+Jan Holub
+· Czech Technical University in Prague, Czech Republic
+Ben Langmead
+· Johns Hopkins University, Baltimore, MD, USA
 Giovanni Manzini
 · University of Pisa, Italy, 0000-0002-5047-0196
+Gonzalo Navarro
+· CeBiB & DCC, University of Chile, Chile
 Keywords: Taxonomic classification, metagenomics, KATKA, maximal exact matches, string kernels, minimizer digests
 URL of storage location (DOI or other persistent identifier): https://archive.softwareheritage.org/browse/directory/8b5cba2a90c1418c7a467f89d0dbc4ef7b5c938f/
 Description: Software for finding the leftmost and the rightmost positions of each MEMs of the read with respect to the text.
