@@ -22,10 +22,12 @@ Giovanni Manzini
 Gonzalo Navarro
 · CeBiB & DCC, University of Chile, Chile
 Keywords: Taxonomic classification, metagenomics, KATKA, maximal exact matches, string kernels, minimizer digests
-URL of storage location (DOI or other persistent identifier): https://archive.softwareheritage.org/browse/directory/8b5cba2a90c1418c7a467f89d0dbc4ef7b5c938f/
-Description: Software for finding the leftmost and the rightmost positions of each MEMs of the read with respect to the text.
-Relevance to the project (optional): Link to technical documentation: https://github.com/draessld/KATKA2
+URL of storage location (DOI or other persistent identifier): https://github.com/draessld/KATKA2
+Description: Software for finding the leftmost and the rightmost positions of each MEMs of the read with respect to the text. Combine two standard compression methods applied to specific problem of MEM finding in the taxonomic tree to approximate result with minimal loss on accuracy.
+Relevance to the project (optional): KATKA2 inherits the strength of two methods - minimizers and KATKA kernels, to achieve even more memory savings. This paper presents implementation of a taxonomic classification tool KATKA2 related to RO 12.4.
+Link to technical documentation: https://github.com/draessld/KATKA2
 License (including restrictions and copyrights): CC-BY-4.0 license
 System requirements (e.g. OS/hardware requirements, programming language, libraries): Cmake > 3.0.0, c++17, sdsl, lboost
-Type of interface/API: console app Links to related publications and/or datasets: https://www.arb-silva.de/download/arb-files/
+Type of interface/API: console app 
+Links to related publications and/or datasets: https://www.arb-silva.de/download/arb-files/ https://drops.dagstuhl.de/storage/00lipics/lipics-vol301-sea2024/LIPIcs.SEA.2024.10/LIPIcs.SEA.2024.10.pdf
 Naming convention of file/s and/or software: N/A
