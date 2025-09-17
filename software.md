@@ -1,6 +1,6 @@
 #  Software
 Title of output (not the same as relevant publication/article): KATKA2
-Registration number / Internal identifier: N/A
+Registration number / Internal identifier: KATKA2 - Ing. Bohuslavová
 Version: 0.0.1
 Project title: Robotics and Advanced Industrial Production
 Project registration number: CZ.02.01.01/00/22_008/0004590
@@ -29,5 +29,5 @@ Link to technical documentation: https://github.com/draessld/KATKA2
 License (including restrictions and copyrights): CC-BY-4.0 license
 System requirements (e.g. OS/hardware requirements, programming language, libraries): Cmake > 3.0.0, c++17, sdsl, lboost
 Type of interface/API: console app 
-Links to related publications and/or datasets: https://www.arb-silva.de/download/arb-files/ https://drops.dagstuhl.de/storage/00lipics/lipics-vol301-sea2024/LIPIcs.SEA.2024.10/LIPIcs.SEA.2024.10.pdf
+Links to related publications and/or datasets: https://www.arb-silva.de/download/arb-files/ 10.4230/LIPIcs.SEA.2024.10
 Naming convention of file/s and/or software: N/A
