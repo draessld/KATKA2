@@ -20,7 +20,9 @@ Gives an **output** like
 ```
 
 ### Compile
-You need the boost library and SDSL installed on your system. Please use version [this](https://github.com/vgteam/sdsl-lite) version of SDSL. 
+You need the boost library (`program_options`) and SDSL installed on your system. Please use [this](https://github.com/vgteam/sdsl-lite) version of SDSL.
+
+The build expects the SDSL headers in `~/include` and the SDSL libraries in `~/lib` (see `CMakeLists.txt`). Adjust those two lines if you installed SDSL elsewhere.
 
 Project uses cmake to generate the Makefile. Create a build folder in the main folder:
 ```
@@ -28,6 +30,7 @@ $   mkdir build
 $   cd build; cmake ..
 $   make
 ```
+This produces four executables: `index-build`, `index-locate`, `kernelize` and `minimizer_digest`.
 ###  Run
 To build index, run
 
@@ -35,12 +38,12 @@ To build index, run
 $   index-build ../src/tests/test.txt
 ```
 
-This command will create the required data structures of the text file and store them using filename as prefix.
-patterns_files should contains every pattern on a new line. For searching simple pattern can be used option -p\<pattern\>.
+This command creates the required data structures next to the input as `<file>.index/`, using the filename (without extension) as prefix. For `../src/tests/test.txt` that is `../src/tests/test.txt.index/test.*`, so the index prefix passed to `index-locate` is `../src/tests/test.txt.index/test`.
+The pattern file should contain one pattern per line. For a single pattern use option -p\<pattern\>.
 To locate all MEMs in relation to pattern
 ```
-$   ./index-locate ../src/tests/test/test -P../src/tests/test.pattern
-$   ./index-locate ../src/tests/test/test -p<pattern>
+$   ./index-locate ../src/tests/test.txt.index/test -P../src/tests/test.pattern
+$   ./index-locate ../src/tests/test.txt.index/test -p<pattern>
 ```
 results are printed on the standard output
 
@@ -57,18 +60,17 @@ $   ./kernelize -s<pattern> -k<k>
 to kernelize simple pattern
 
 ###  Creating minimizer digests
-To create minimizer digests with parameter *w*, run either
-```
-$   ./minimizer_digest -i../src/tests/test.txt -w<w>
-``` 
-to digest full text in the file, or 
+A minimizer digest replaces the text with the sequence of its minimizers. Each window of *w* consecutive *m*-mers contributes its minimum-hash *m*-mer; that *m*-mer is written to the digest under an injective encoding, so maximal exact matches are preserved. Parameters: *w* (window), *m* (the *m*-mer length, option `-k`, default 3), and the selection hash (option `-H`, one of `djb2` | `sdbm` | `loselose` | `mult`, default `djb2`).
 
+To digest the whole file:
 ```
-$   ./minimizer_digest -s<pattern> -w<w>
+$   ./minimizer_digest -i../src/tests/test.txt -w<w> -k<m> -H<hash>
 ``` 
-to digest simple pattern
-
-**Note:** So far, parameter k for minimizers is static k=3
+or a single sequence:
+```
+$   ./minimizer_digest -s<sequence> -w<w> -k<m> -H<hash>
+``` 
+`-k` and `-H` are optional (default `-k3 -Hdjb2`). Example: `./minimizer_digest -i../src/tests/test.txt -w10 -k3`.
 
 ##  Experiments
 Experiments described in the article were run over the SILVA dataset, available [here](https://www.arb-silva.de/download/arb-files/). [1000](genera_from_1100_to_2100.txt) samples were taken in range 1100-2100 from total 9118 reference files. Main result of the project is described within the following graph. 
