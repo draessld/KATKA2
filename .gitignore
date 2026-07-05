@@ -1,10 +1,53 @@
+# =========================================================================
+#  Directories that don't belong in the repo
+# =========================================================================
 build/**
 other/**
 src/tests/**
 experiments/**
+
+# =========================================================================
+#  Documents & images (papers, agreements, plots, screenshots)
+# =========================================================================
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.tar
+*.tar.gz
+# keep the main result graph that README.md displays
+!1000genomes_simulated_error_rate_1p_w_lines.png
+
+# =========================================================================
+#  Markdown — only README.md is tracked
+# =========================================================================
+*.md
+!README.md
+# Flip these to track the working docs instead:
+# !CLAUDE.md
+# !TODO.md
 notes.md
 
-#   exclude
+# =========================================================================
+#  C++ sources belong under src/ only; ignore stray/scratch .cpp elsewhere
+# =========================================================================
+*.cpp
+!src/**/*.cpp
+
+# =========================================================================
+#  Build artifacts & editor/OS cruft
+# =========================================================================
+a.out
+*.out
+*.o
+*.gch
+.vscode/
+.DS_Store
+
+# =========================================================================
+#  Test data kept on purpose
+# =========================================================================
 !src/tests/test.txt
 !src/tests/test.pattern
 !src/tests/yeast.txt

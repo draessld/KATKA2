@@ -7,11 +7,13 @@
 
 namespace po = boost::program_options;
 
-const std::string usage = "";
+const std::string usage = "-w<window> [-k<m-mer length, default 3>] [-H<hash>] (-i<file> | -s<sequence>)";
 
 typedef struct Config
 {
-    int w;
+    int w = 0;                 // minimizer window: number of consecutive m-mers looked at
+    int k = 3;                 // m-mer length (paper uses 3). Named 'k' for CLI back-compat.
+    std::string hash_name = "djb2"; // hash used only to SELECT minimizers
     std::filesystem::path input_path;
     std::string suffix = ".dgt";
     std::string pattern;
@@ -24,10 +26,11 @@ int handle_parameters(int argc, char **argv)
 {
     po::options_description desc("Allowed options");
 
-    desc.add_options()("help", "produce help message")("window_size,w", po::value<int>(&cfg.w), "lookahead window size")("input-sequence,s", po::value<std::string>(&cfg.pattern), "simple sequence input")("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
+    desc.add_options()("help", "produce help message")("window_size,w", po::value<int>(&cfg.w), "minimizer window size (#consecutive m-mers)")("k_mer_size,k", po::value<int>(&cfg.k), "m-mer length (default 3)")("hash,H", po::value<std::string>(&cfg.hash_name), "selection hash: djb2|sdbm|loselose|mult (default djb2)")("input-sequence,s", po::value<std::string>(&cfg.pattern), "simple sequence input")("input-file,i", po::value<std::filesystem::path>(&cfg.input_path), "input file");
 
     po::positional_options_description posOptions;
     posOptions.add("window_size", 1);
+    posOptions.add("k_mer_size", 1);
 
     po::variables_map vm;
     try
@@ -64,103 +67,176 @@ int handle_parameters(int argc, char **argv)
     return 0;
 }
 
-int hash_function(int x)
+// ==========================================================================
+//  m-mer identity encoding
+//  Maps the m-mer text[pos..pos+m) to a unique integer in [0, 4^m).
+//  This is what the DIGEST characters are built from, so it MUST be
+//  injective: equal m-mers -> equal value -> equal digest bytes, which is
+//  what preserves MEMs through the digest. (T -> 0, A -> 1, C -> 2, G -> 3.)
+// ==========================================================================
+uint64_t mmer2int(const std::string &s, size_t pos, size_t m)
 {
-    return ((2544 * x + 3937) % 8863);
-}
-
-int triple2int(char a, char b, char c)
-{
-    int sum = 0;
-
-    switch (a)
+    uint64_t val = 0;
+    uint64_t radix = 1;
+    for (size_t i = 0; i < m; i++)
     {
-    case 'C':
-        sum = 1;
-        break;
-    case 'G':
-        sum = 2;
-        break;
-    case 'T':
-        sum = 3;
-        break;
-    }
-
-    switch (b)
-    {
-    case 'C':
-        sum += 4;
-        break;
-    case 'G':
-        sum += 8;
-        break;
-    case 'T':
-        sum += 12;
-        break;
-    }
-
-    switch (c)
-    {
-    case 'C':
-        sum += 16;
-        break;
-    case 'G':
-        sum += 32;
-        break;
-    case 'T':
-        sum += 48;
-        break;
-    }
-
-    return (sum);
-}
-
-int minimizer_digest(std::string &text, unsigned w)
-{
-    sdsl::bit_vector B(text.size(), 0);
-    int *H = new int[text.size()];
-
-    for (size_t i = 0; i <= text.size() - 3; i++)
-    {
-        H[i] = hash_function(triple2int(text[i], text[i + 1], text[i + 2]));
-    }
-
-    if (text.size() >= (w + 2))
-    {
-        for (size_t i = 0; i <= (text.size() - 2 - w); i++)
+        switch (s[pos + i])
         {
-            if (text[i + 1 + w] == '$' || text[i + w + 1] == '#')
-            {
-                i += (1 + w);
-                continue;
-            }
+        case 'A':
+            val += 1 * radix;
+            break;
+        case 'C':
+            val += 2 * radix;
+            break;
+        case 'G':
+            val += 3 * radix;
+            break;
+        case 'T':
+            // T -> 0
+            break;
+        }
+        radix *= 4;
+    }
+    return val;
+}
 
-            int minVal = H[i];
-            int minPos = i;
-            for (size_t k = 1; k < w; k++)
+// ==========================================================================
+//  k-mer hash functions (used ONLY to select minimizers, never as identity)
+//  Each hashes the m-mer text[pos..pos+len). Any well-spread hash works;
+//  a better spread means fewer ties and more evenly placed minimizers.
+//  Sources: http://www.cse.yorku.ca/~oz/hash.html
+// ==========================================================================
+uint64_t djb2(const std::string &s, size_t pos, size_t len)
+{
+    uint64_t hash = 5381;
+    for (size_t i = 0; i < len; i++)
+        hash = ((hash << 5) + hash) + (unsigned char)s[pos + i]; // hash * 33 + c
+    return hash;
+}
+
+uint64_t sdbm(const std::string &s, size_t pos, size_t len)
+{
+    uint64_t hash = 0;
+    for (size_t i = 0; i < len; i++)
+        hash = (unsigned char)s[pos + i] + (hash << 6) + (hash << 16) - hash;
+    return hash;
+}
+
+uint64_t loselose(const std::string &s, size_t pos, size_t len)
+{
+    uint64_t hash = 0;
+    for (size_t i = 0; i < len; i++)
+        hash += (unsigned char)s[pos + i];
+    return hash;
+}
+
+// Original KATKA2 hash: multiplicative over the m-mer identity. Small range
+// (mod 8863) so it ties often; kept for comparison with the paper.
+uint64_t mult(const std::string &s, size_t pos, size_t len)
+{
+    return (2544ULL * mmer2int(s, pos, len) + 3937) % 8863;
+}
+
+typedef uint64_t (*hash_fn)(const std::string &, size_t, size_t);
+
+hash_fn select_hash(const std::string &name)
+{
+    if (name == "djb2")
+        return djb2;
+    if (name == "sdbm")
+        return sdbm;
+    if (name == "loselose")
+        return loselose;
+    if (name == "mult")
+        return mult;
+    std::cerr << "Unknown hash '" << name << "', falling back to djb2." << std::endl;
+    return djb2;
+}
+
+// ==========================================================================
+//  Minimizer digest
+//    m    m-mer length
+//    w    window size (number of consecutive m-mers)
+//    hash selection hash
+//
+//  For every window of w consecutive m-mers, the m-mer with the smallest
+//  hash is marked (the minimizer). The digest is the concatenation of the
+//  injective encodings of the marked m-mers, with '$'/'#' separators copied
+//  through. Each m-mer is emitted as ceil(2m/7) bytes, 7 identity bits each,
+//  offset by +37 so digest bytes never collide with '$' (36) or '#' (35).
+// ==========================================================================
+int minimizer_digest(std::string &text, unsigned m, unsigned w, hash_fn hash)
+{
+    const size_t n = text.size();
+    if (n < m)
+    {
+        // Nothing to digest: too short to hold a single m-mer.
+        text.clear();
+        return 0;
+    }
+
+    // How many 7-bit bytes are needed to encode an m-mer identity (< 4^m).
+    const unsigned id_bits = 2 * m;                 // 4^m == 2^(2m)
+    const unsigned bytes = (id_bits + 6) / 7;       // ceil(id_bits / 7)
+
+    // 1) Hash every m-mer. m-mers straddling a separator are invalid and get
+    //    the maximum value so they are never chosen as a minimizer.
+    std::vector<uint64_t> H(n, std::numeric_limits<uint64_t>::max());
+    for (size_t i = 0; i + m <= n; i++)
+    {
+        bool has_sep = false;
+        for (size_t j = i; j < i + m; j++)
+            if (text[j] == '$' || text[j] == '#')
+            {
+                has_sep = true;
+                break;
+            }
+        if (!has_sep)
+            H[i] = hash(text, i, m);
+    }
+
+    // 2) Slide a window of w consecutive m-mers, mark the minimum-hash one.
+    sdsl::bit_vector B(n, 0);
+    if (n >= m + w - 1)
+    {
+        for (size_t i = 0; i + m + w - 1 <= n; i++)
+        {
+            uint64_t minVal = std::numeric_limits<uint64_t>::max();
+            size_t minPos = i;
+            bool any = false;
+            for (size_t k = 0; k < w; k++)
             {
                 if (H[i + k] < minVal)
                 {
                     minVal = H[i + k];
                     minPos = i + k;
+                    any = true;
                 }
             }
-            B[minPos] = 1;
+            if (any)
+                B[minPos] = 1;
         }
     }
 
+    // 3) Emit the digest: separators pass through, marked m-mers are encoded.
     std::string digest;
-
-    for (size_t i = 0; i < B.size(); i++)
+    for (size_t i = 0; i < n; i++)
     {
-        if (text[i + 2] == '$' || text[i + 2] == '#')
+        size_t end = i + m - 1; // last position of the m-mer starting at i
+        if (end < n && (text[end] == '$' || text[end] == '#'))
         {
-            digest.push_back(text[i + 2]);
+            digest.push_back(text[end]);
             continue;
         }
-        if (B[i])
+        if (i + m <= n && B[i])
         {
-            digest.push_back((char)(triple2int(text[i], text[i + 1], text[i + 2]) + 37));
+            uint64_t val = mmer2int(text, i, m);
+            for (unsigned b = 0; b < bytes; b++)
+            {
+                unsigned shift = 7 * (bytes - 1 - b); // most-significant group first
+                uint8_t group = (val >> shift) & 0x7F;
+                digest.push_back((char)(group + 37));
+            }
         }
     }
 
@@ -183,6 +259,14 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
+    if (cfg.k < 1 || cfg.w < 1)
+    {
+        std::cerr << "Error: both -k (m-mer length) and -w (window) must be >= 1." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    hash_fn hash = select_hash(cfg.hash_name);
+
     if (!cfg.input_path.empty())
     {
         std::string digest;
@@ -194,26 +278,20 @@ int main(int argc, char **argv)
         }
 
         char c;
-
         while (in.get(c))
         {
             if (c == '\t' || c == '\n')
                 continue;
             digest.push_back(c);
-            if (!in)
-            {
-                std::cout << "ERROR: File " << cfg.input_path << " does not exist. Exit." << std::endl;
-                return 1;
-            }
         }
         in.close();
-        minimizer_digest(digest, cfg.w);
+        minimizer_digest(digest, (unsigned)cfg.k, (unsigned)cfg.w, hash);
         std::cout << digest << std::endl;
     }
 
     if (!cfg.pattern.empty())
     {
-        minimizer_digest(cfg.pattern, cfg.w);
+        minimizer_digest(cfg.pattern, (unsigned)cfg.k, (unsigned)cfg.w, hash);
         std::cout << cfg.pattern << std::endl;
     }
 
