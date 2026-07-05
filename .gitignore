@@ -2,9 +2,17 @@
 #  Directories that don't belong in the repo
 # =========================================================================
 build/**
+scripts/build/**
 other/**
 src/tests/**
 experiments/**
+output/
+
+# =========================================================================
+#  Generated tooling config (run.py / INSTALL.sh)
+# =========================================================================
+configure.json
+configuration.json
 
 # =========================================================================
 #  Documents & images (papers, agreements, plots, screenshots)
@@ -30,10 +38,11 @@ experiments/**
 notes.md
 
 # =========================================================================
-#  C++ sources belong under src/ only; ignore stray/scratch .cpp elsewhere
+#  C++ sources belong under src/ or scripts/ only; ignore stray/scratch .cpp
 # =========================================================================
 *.cpp
 !src/**/*.cpp
+!scripts/**/*.cpp
 
 # =========================================================================
 #  Build artifacts & editor/OS cruft
