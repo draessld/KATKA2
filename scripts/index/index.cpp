@@ -101,6 +101,8 @@ double Index::find(std::string pattern)
 {
     auto base = std::chrono::high_resolution_clock::now();
 
+    occurences.clear(); //  results are per-pattern; find.cpp reuses one Index across patterns
+
     auto r = cst.root();
     size_t length = 1;
     auto o = r;

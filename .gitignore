@@ -4,9 +4,13 @@
 build/**
 scripts/build/**
 other/**
-src/tests/**
 experiments/**
 output/
+# generated pipeline outputs (index dirs, digests, kernels, MEM tables)
+*.index/
+*_m[0-9]*_w[0-9]*
+*_k[0-9]*
+out.out
 
 # =========================================================================
 #  Generated tooling config (run.py / INSTALL.sh)
@@ -38,10 +42,9 @@ configuration.json
 notes.md
 
 # =========================================================================
-#  C++ sources belong under src/ or scripts/ only; ignore stray/scratch .cpp
+#  C++ sources belong under scripts/ only; ignore stray/scratch .cpp
 # =========================================================================
 *.cpp
-!src/**/*.cpp
 !scripts/**/*.cpp
 
 # =========================================================================
@@ -54,10 +57,5 @@ a.out
 .vscode/
 .DS_Store
 
-# =========================================================================
-#  Test data kept on purpose
-# =========================================================================
-!src/tests/test.txt
-!src/tests/test.pattern
-!src/tests/yeast.txt
-!src/tests/yeast.pattern
+# tests/test.txt and tests/test.pattern are tracked by default (no rule ignores them);
+# generated outputs under tests/ are covered by the pipeline-output rules above.

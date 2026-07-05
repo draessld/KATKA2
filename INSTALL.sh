@@ -1,41 +1,34 @@
 #!/bin/bash
+#
+# KATKA2 installer: build the C++ tools and generate configure.json for run.py.
 
-# Exit immediately if a command exits with a non-zero status
 set -e
 
-# Get the absolute path to the directory containing this script
-BASE_DIR=$(pwd)
+# Absolute path to the directory containing this script.
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASE_DIR"
 
-echo "Starting project configuration..."
+echo "Starting project configuration in $BASE_DIR ..."
 
-# 1. Install Python dependencies
+# 1. Install Python dependencies (non-fatal: only needed for download/configure).
 echo "Installing Python dependencies..."
-pip install -r requirements.txt
+if ! pip install -r requirements.txt; then
+    echo "WARNING: 'pip install -r requirements.txt' failed."
+    echo "         The core pipeline (minimize/kernelize/build/find) still works;"
+    echo "         Biopython/requests/tqdm are only needed for 'download'/'configure'."
+fi
 
-# 2. Compile C++ code
+# 2. Compile the C++ tools (Release / -O3).
 echo "Compiling C++ code..."
 mkdir -p "$BASE_DIR/scripts/build"
 cd "$BASE_DIR/scripts/build"
-cmake ..
-cmake --build .
-cd $BASE_DIR
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . -j
+cd "$BASE_DIR"
 
-# 3. Run C++ tests
-# echo "Compiling and running C++ tests..."
-# g++ -std=c++17 -o "$BASE_DIR/scripts/build/tests" tests/cpp_tests.cpp
-# "$BASE_DIR/scripts/build/tests"
-
-# 4. Run Python tests
-# echo "Running Python tests..."
-# python -m unittest discover -s tests -p '*_test.py'
-
-# 5. Create alias for run.py
-echo "Creating alias 'katka2' for run.py..."
-alias katka2="python $BASE_DIR/run.py"
-
-# 6. Generate configure.json file
+# 3. Generate configure.json (paths run.py reads via get_exe()).
 echo "Generating configure.json..."
-cat <<EOL > configure.json
+cat <<EOL > "$BASE_DIR/configure.json"
 {
     "output_dir": "$BASE_DIR/output",
     "build_dir": "$BASE_DIR/scripts/build",
@@ -48,28 +41,20 @@ cat <<EOL > configure.json
 }
 EOL
 
+# 4. Offer a convenience alias (added to ~/.bash_aliases; guarded, never fatal).
 ALIAS_NAME="katka2"
 ALIAS_COMMAND="python3 $BASE_DIR/run.py"
-
-# File to modify
 BASH_ALIASES_FILE="$HOME/.bash_aliases"
-
-if [ ! -f "$BASH_ALIASES_FILE" ]; then
-  touch "$BASH_ALIASES_FILE"
-  echo "$BASH_ALIASES_FILE created."
-fi
-
-# Check if the alias already exists in ~/.bash_aliases
+touch "$BASH_ALIASES_FILE"
 if grep -q "alias $ALIAS_NAME=" "$BASH_ALIASES_FILE" 2>/dev/null; then
-  # If found, replace the existing alias
-  sed -i "s|alias $ALIAS_NAME=.*|alias $ALIAS_NAME='$ALIAS_COMMAND'|" "$BASH_ALIASES_FILE"
-  echo "Alias '$ALIAS_NAME' replaced in $BASH_ALIASES_FILE"
-  unalias $ALIAS_NAME
-  alias $ALIAS_NAME="$ALIAS_COMMAND"
+    sed -i "s|alias $ALIAS_NAME=.*|alias $ALIAS_NAME='$ALIAS_COMMAND'|" "$BASH_ALIASES_FILE"
+    echo "Alias '$ALIAS_NAME' updated in $BASH_ALIASES_FILE"
 else
-  # If not found, add the new alias
-  echo "alias $ALIAS_NAME='$ALIAS_COMMAND'" >> "$BASH_ALIASES_FILE"
-  echo "Alias '$ALIAS_NAME' added to $BASH_ALIASES_FILE"
+    echo "alias $ALIAS_NAME='$ALIAS_COMMAND'" >> "$BASH_ALIASES_FILE"
+    echo "Alias '$ALIAS_NAME' added to $BASH_ALIASES_FILE"
 fi
 
-source ~/.bashrc
+echo
+echo "Done. Start a new shell (or run 'source ~/.bash_aliases') to use:"
+echo "    katka2 minimize -m 3 -w 10 <file>"
+echo "or call it directly:  python3 $BASE_DIR/run.py --help"

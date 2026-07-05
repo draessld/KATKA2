@@ -3,12 +3,7 @@
 import argparse
 import subprocess
 import os
-from Bio import Phylo
-from Bio import Seq
-from Bio import SeqIO
-import requests as r
 import xml.etree.ElementTree as ET
-from tqdm import tqdm
 import json
 import sys
 import shutil
@@ -16,6 +11,10 @@ import glob
 import re
 import math
 import datetime
+
+# NOTE: Biopython / requests / tqdm are imported lazily inside the functions
+# that need them (configure, download, read_nwk, download_sequence) so the core
+# pipeline (minimize / kernelize / build / find) runs without those heavy deps.
 
 #   TODO
 #       pipelining commands??
@@ -155,8 +154,8 @@ def minimize(*args, **kwargs):
             print(out)
 
     except Exception as e:
-        raise Exception(f'Error during minimization')
-    
+        raise Exception(f'Error during minimization: {e}') from e
+
     return out_files
 
 def minimize_file(exe,in_file,out_file,m,w,line_parse=False):
@@ -203,22 +202,25 @@ def kernelize(*args, **kwargs):
 
         for i,sequence in enumerate(sequences):
             out,c = kernelize_sequence(executable_path,sequence,k)
-            compression_ratio = get_compression_ratio(sequences,1,out,1)
-            stat = sequence if len(sequence) < 50 else sequence[:50]+'...' 
-            print(f'>Kernelized sequence:{stat}\tk:{k}\ttime:{c.microseconds}c/mmer:{str(bytes)}\tcr:{compression_ratio}')
+            compression_ratio = get_compression_ratio(sequence,1,out,1)
+            stat = sequence if len(sequence) < 50 else sequence[:50]+'...'
+            print(f'>Kernelized sequence:{stat}\tk:{k}\ttime:{c.microseconds}\tcr:{compression_ratio}')
             print(out)
 
     except Exception as e:
-        raise Exception(f'Error during kernelization')
-    
+        raise Exception(f'Error during kernelization: {e}') from e
+
     return out_files
 
 def kernelize_file(exe,in_file,out_file,k,line_parse=False):
     a = datetime.datetime.now()
     if line_parse:
+        open(out_file,'w').close()  # truncate before appending each line's kernel
         with open(in_file,'r') as f:
             for line in f.readlines():
-                p = subprocess.run([exe,k,in_file], stdout=open(out_file,'w'),stderr=subprocess.PIPE)
+                line = line.strip()
+                if line:
+                    p = subprocess.run([exe,k,line], stdout=open(out_file,'a'),stderr=subprocess.PIPE)
     else:
         p = subprocess.run([exe,k,in_file], stdout=open(out_file,'w'),stderr=subprocess.PIPE)
     b = datetime.datetime.now()
@@ -271,6 +273,9 @@ def configure(**kwargs):
     # if os.path.exists(cfg_file):
     #     print("Warning: Replacing previous configuration!")
     #     os.remove(cfg_file)
+
+    from Bio import Phylo
+    from Bio import SeqIO
 
     with open(cfg_file,'r') as f:
         cfg = json.load(f)
@@ -348,6 +353,9 @@ def configure(**kwargs):
 
 @setup
 def download(*args, **kwargs):
+    from Bio import Phylo
+    from tqdm import tqdm
+
     tree_file = args[0]
     database = args[1]
 
@@ -374,6 +382,7 @@ def download(*args, **kwargs):
     print(f'Data download succesfull, result on {data_dir}')
 
 def download_sequence(name,db='protein'):
+    import requests as r
     base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
     name = name.split(':')[0]
     url = base + f"esearch.fcgi?db={db}&term={name}&usehistory=y"
@@ -385,6 +394,7 @@ def download_sequence(name,db='protein'):
     return ''.join(x.text.split('\n')[1:])
 
 def read_nwk(nwk):
+    from Bio import Phylo
     tree = Phylo.read(nwk, "newick")
     leaves = tree.get_terminals()
     # print(f'Total {len(leaves)} sequences')
@@ -518,23 +528,10 @@ def main():
         clean()
     elif args.command == "list":   # done
         list_indices()
-    elif args.command == "kernelize":   # done
-        if args.i:
-            #   minimize sequence given on input
-            for k in args.k:
-                kernelize_sequence(args.i,k)
-        elif args.I:
-            if not os.path.exists(args.I):
-                raise FileNotFoundError(f"Given input wasnt found on {args.I}")
-            files = [args.I]
-            for k in args.k:
-                out_files = kernelize_file(files,k)   
-                print(out_files)
-        else:
-            files = [get_base_file()]
-            for k in args.k:
-                out_files = kernelize_file(files,k)   
-                print(out_files)
+    elif args.command == "kernelize":
+        sequences,files = parse_inputs(args.inputs)
+        for k in args.k:
+            kernelize(files=files, sequences=sequences, k=k, line_parse=args.line_parse, rebuild=args.rebuild)
     elif args.command == "find_mems":
         _, indices_files = parse_inputs(args.index,type='d')
         sequences,patterns_files = parse_inputs(args.pattern,type='f')
