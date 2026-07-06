@@ -1,22 +1,29 @@
 # =========================================================================
+#  Deferred run.py / scripts/ toolchain — kept on disk, NOT tracked for now.
+#  Too early to release; revisit after the minimizer-influence experiments.
+#  (Also preserved on the origin/dev branch history.)
+# =========================================================================
+run.py
+scripts/
+INSTALL.sh
+requirements.txt
+configure.json
+configuration.json
+output/
+
+# =========================================================================
 #  Directories that don't belong in the repo
 # =========================================================================
 build/**
-scripts/build/**
 other/**
 experiments/**
-output/
+notes.md
+
 # generated pipeline outputs (index dirs, digests, kernels, MEM tables)
 *.index/
 *_m[0-9]*_w[0-9]*
 *_k[0-9]*
 out.out
-
-# =========================================================================
-#  Generated tooling config (run.py / INSTALL.sh)
-# =========================================================================
-configure.json
-configuration.json
 
 # =========================================================================
 #  Documents & images (papers, agreements, plots, screenshots)
@@ -39,13 +46,12 @@ configuration.json
 # Flip these to track the working docs instead:
 # !CLAUDE.md
 # !TODO.md
-notes.md
 
 # =========================================================================
-#  C++ sources belong under scripts/ only; ignore stray/scratch .cpp
+#  C++ sources belong under src/ only; ignore stray/scratch .cpp elsewhere
 # =========================================================================
 *.cpp
-!scripts/**/*.cpp
+!src/**/*.cpp
 
 # =========================================================================
 #  Build artifacts & editor/OS cruft
@@ -57,5 +63,10 @@ a.out
 .vscode/
 .DS_Store
 
-# tests/test.txt and tests/test.pattern are tracked by default (no rule ignores them);
-# generated outputs under tests/ are covered by the pipeline-output rules above.
+# =========================================================================
+#  Test data kept on purpose
+# =========================================================================
+!src/tests/test.txt
+!src/tests/test.pattern
+!src/tests/yeast.txt
+!src/tests/yeast.pattern

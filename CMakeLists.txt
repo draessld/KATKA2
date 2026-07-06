@@ -5,21 +5,20 @@ include(CTest)
 enable_testing()
 
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
+set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../../exe/")
 
 # ############################################################
-set(INDEX-BUILD "build")
-set(INDEX-FIND "find")
+set(INDEX-BUILD "index-build")
+set(INDEX-LOCATE "index-locate")
 set(KERNELIZE "kernelize")
-set(MINIMIZER_DIGEST "minimize")
+set(MINIMIZER_DIGEST "minimizer_digest")
 
-set(KERNELIZE_EXEC "kernelize.cpp")
-set(MINIMIZER_DIGEST_EXEC "minimize.cpp")
-set(INDEX-BUILD_EXEC "build.cpp")
-set(INDEX-FIND_EXEC "find.cpp")
+set(KERNELIZE_EXEC "src/kernelize.cpp")
+set(MINIMIZER_DIGEST_EXEC "src/minimizer_digest.cpp")
+set(INDEX-BUILD_EXEC "src/build.cpp")
+set(INDEX-LOCATE_EXEC "src/locate.cpp")
 
 # GLOBAL OPTIONS
 ############################################################
@@ -28,9 +27,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -st
 
 # files for index
 ############################################################
-file(GLOB index_C "index/*.cpp")
-file(GLOB index_H "index/*.h")
+file(GLOB index_C "src/index/*.cpp")
+file(GLOB index_H "src/index/*.h")
 file(GLOB index ${index_C} ${index_H})
+
+# # INDEX UTILS
+# ############################################################
+file(GLOB_RECURSE UTILS "src/utils/*.cpp")
 
 # SDSL
 ############################################################
@@ -60,8 +63,8 @@ target_link_libraries(${INDEX-BUILD} "-ldivsufsort")
 target_link_libraries(${INDEX-BUILD} "-ldivsufsort64")
 target_link_libraries(${INDEX-BUILD} "-lboost_program_options")
 
-add_executable(${INDEX-FIND} ${INDEX-FIND_EXEC} ${UTILS} ${index})
-target_link_libraries(${INDEX-FIND} "-lsdsl")
-target_link_libraries(${INDEX-FIND} "-ldivsufsort")
-target_link_libraries(${INDEX-FIND} "-ldivsufsort64")
-target_link_libraries(${INDEX-FIND} "-lboost_program_options")
+add_executable(${INDEX-LOCATE} ${INDEX-LOCATE_EXEC} ${UTILS} ${index})
+target_link_libraries(${INDEX-LOCATE} "-lsdsl")
+target_link_libraries(${INDEX-LOCATE} "-ldivsufsort")
+target_link_libraries(${INDEX-LOCATE} "-ldivsufsort64")
+target_link_libraries(${INDEX-LOCATE} "-lboost_program_options")

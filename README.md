@@ -1,83 +1,77 @@
 # MEM finding tool for taxonomic classification
 
 ##  Brief description
-Software for finding the **leftmost** and the **rightmost** positions of each MEM of a read
-with respect to the text, described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*.
+Software for finding the **leftmost** and the **rightmost** positions of each MEMs of the read
+with respect to the text described in *Draesslerova, D., Ahmed, O., Gagie, T., Holub, J., Langmead, B., Manzini, G., & Navarro, G. Taxonomic classification with maximal exact matches in KATKA kernels and minimizer digests*
 
-The text is a concatenation of reference genomes divided with the `$` character:
-```
-GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA$
-```
 
-For each pattern the tool reports its MEMs and, per MEM, the leftmost/rightmost genome it occurs in:
+Implementation takes **input** as a simple string or a concatenation of strings divided with $ character.
 ```
->pattern  time_us   #MEMs
-[start,end]{leftmost_genome,rightmost_genome}   [start,end]{leftmost_genome,rightmost_genome}   ...
+GATTACAT$AGATACAT$GATACAT$GATTAGAT$GATTAGATA
 ```
 
-## Install
-
-Requirements:
-- **SDSL** — use [this fork](https://github.com/vgteam/sdsl-lite). The build expects SDSL
-  headers in `~/include` and libraries in `~/lib` (see `scripts/CMakeLists.txt`; adjust those
-  two lines if installed elsewhere).
-- **Boost** (`program_options`) and a C++17 compiler + CMake.
-- **Python 3** for the `katka2` driver. `Biopython`, `requests` and `tqdm`
-  (`requirements.txt`) are only needed for the `download` / `configure` commands; the core
-  pipeline runs without them.
-
+Gives an **output** like
 ```
-$   bash INSTALL.sh
-```
-This builds the C++ tools into `scripts/build/`, writes `configure.json`, and adds a
-`katka2` alias for `python3 run.py`. Start a new shell (or `source ~/.bash_aliases`) to use
-the alias; otherwise call `python3 run.py <command>` directly.
-
-## Usage
-
-Everything is driven through `run.py` (aliased `katka2`). `-m`, `-w`, `-k` accept either a
-single value or a range `start-stop-step`.
-
-### Minimizer digest
-Replaces the text with the sequence of its minimizers. Each window of *w* consecutive
-*m*-mers contributes its minimum-hash *m*-mer, written under an injective encoding so MEMs
-are preserved (*m* defaults to the paper's 3).
-```
-$   katka2 minimize -m 3 -w 10 <file-or-sequence> [--line_parse]
-```
-Output is written next to the input as `<file>_m<m>_w<w>`.
-
-### KATKA kernel
-Keeps only the characters needed to preserve MEMs of length ≥ *k*; gaps collapse to `#`.
-```
-$   katka2 kernelize -k 31 <file-or-sequence> [--line_parse]
-```
-Output is written next to the input as `<file>_k<k>`.
-
-### Build an index
-Optionally minimize (`-m -w`) and/or kernelize (`-k`) the inputs first, then build the index.
-```
-$   katka2 build [-m 3 -w 10] [-k 31] <file>
-```
-The index is written to `<transformed-file>.index/`.
-
-### Find MEMs
-```
-$   katka2 find_mems <index_dir> -p <pattern-file-or-sequence>    # all MEMs -> <index>/out.out
-$   katka2 find_leaf <index_dir> <pattern-file-or-sequence>       # best single-genome (leaf) match
+>pattern  time_in_ms    #Mems
+[start_position,end_position]{leftmost_genome,rightmost_genome}       [start_position,end_position]{leftmost_genome,rightmost_genome}       ...
+>pattern  time_in_ms    #Mems
+[start_position,end_position]{leftmost_genome,rightmost_genome}       [start_position,end_position]{leftmost_genome,rightmost_genome}       ...
+...
 ```
 
-### Data preparation (needs Biopython)
+### Compile
+You need the boost library (`program_options`) and SDSL installed on your system. Please use [this](https://github.com/vgteam/sdsl-lite) version of SDSL.
+
+The build expects the SDSL headers in `~/include` and the SDSL libraries in `~/lib` (see `CMakeLists.txt`). Adjust those two lines if you installed SDSL elsewhere.
+
+Project uses cmake to generate the Makefile. Create a build folder in the main folder:
 ```
-$   katka2 configure <tree.nwk> <fasta_dir>   # concatenate leaves' FASTA into one text
-$   katka2 download  <tree.nwk> <ncbi_db>     # fetch leaf sequences from NCBI
-$   katka2 list                               # list built indices
-$   katka2 clean                              # clear the workspace
+$   mkdir build
+$   cd build; cmake ..
+$   make
 ```
+This produces four executables: `index-build`, `index-locate`, `kernelize` and `minimizer_digest`.
+###  Run
+To build index, run
+
+```
+$   index-build ../src/tests/test.txt
+```
+
+This command creates the required data structures next to the input as `<file>.index/`, using the filename (without extension) as prefix. For `../src/tests/test.txt` that is `../src/tests/test.txt.index/test.*`, so the index prefix passed to `index-locate` is `../src/tests/test.txt.index/test`.
+The pattern file should contain one pattern per line. For a single pattern use option -p\<pattern\>.
+To locate all MEMs in relation to pattern
+```
+$   ./index-locate ../src/tests/test.txt.index/test -P../src/tests/test.pattern
+$   ./index-locate ../src/tests/test.txt.index/test -p<pattern>
+```
+results are printed on the standard output
+
+###  Creating KATKA kernels
+To create KATKA kernel with parameter *k*, run
+```
+$   ./kernelize -i../src/tests/test.txt -k<k>
+``` 
+to kernelize full text in the file, or 
+
+```
+$   ./kernelize -s<pattern> -k<k>
+``` 
+to kernelize simple pattern
+
+###  Creating minimizer digests
+A minimizer digest replaces the text with the sequence of its minimizers. Each window of *w* consecutive *m*-mers contributes its minimum-hash *m*-mer; that *m*-mer is written to the digest under an injective encoding, so maximal exact matches are preserved. Parameters: *w* (window), *m* (the *m*-mer length, option `-k`, default 3), and the selection hash (option `-H`, one of `djb2` | `sdbm` | `loselose` | `mult`, default `djb2`).
+
+To digest the whole file:
+```
+$   ./minimizer_digest -i../src/tests/test.txt -w<w> -k<m> -H<hash>
+``` 
+or a single sequence:
+```
+$   ./minimizer_digest -s<sequence> -w<w> -k<m> -H<hash>
+``` 
+`-k` and `-H` are optional (default `-k3 -Hdjb2`). Example: `./minimizer_digest -i../src/tests/test.txt -w10 -k3`.
 
 ##  Experiments
-Experiments described in the article were run over the SILVA dataset, available
-[here](https://www.arb-silva.de/download/arb-files/). [1000](genera_from_1100_to_2100.txt)
-samples were taken in range 1100-2100 from the total 9118 reference files. The main result is
-shown below.
+Experiments described in the article were run over the SILVA dataset, available [here](https://www.arb-silva.de/download/arb-files/). [1000](genera_from_1100_to_2100.txt) samples were taken in range 1100-2100 from total 9118 reference files. Main result of the project is described within the following graph. 
 ![graph](1000genomes_simulated_error_rate_1p_w_lines.png?raw=true "Title")
