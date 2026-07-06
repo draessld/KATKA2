@@ -1,17 +1,4 @@
 # =========================================================================
-#  Deferred run.py / scripts/ toolchain — kept on disk, NOT tracked for now.
-#  Too early to release; revisit after the minimizer-influence experiments.
-#  (Also preserved on the origin/dev branch history.)
-# =========================================================================
-run.py
-scripts/
-INSTALL.sh
-requirements.txt
-configure.json
-configuration.json
-output/
-
-# =========================================================================
 #  Directories that don't belong in the repo
 # =========================================================================
 build/**
@@ -19,11 +6,10 @@ other/**
 experiments/**
 notes.md
 
-# generated pipeline outputs (index dirs, digests, kernels, MEM tables)
+# generated pipeline outputs (index dirs, digests, kernels)
 *.index/
 *_m[0-9]*_w[0-9]*
 *_k[0-9]*
-out.out
 
 # =========================================================================
 #  Documents & images (papers, agreements, plots, screenshots)

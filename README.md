@@ -31,6 +31,10 @@ $   cd build; cmake ..
 $   make
 ```
 This produces four executables: `index-build`, `index-locate`, `kernelize` and `minimizer_digest`.
+
+Alternatively, run `./INSTALL.sh` to build the tools and add them as shell aliases in
+`~/.bash_aliases` (no Python required), so you can call `index-build`, `index-locate`,
+`kernelize` and `minimizer_digest` from anywhere.
 ###  Run
 To build index, run
 
@@ -38,12 +42,13 @@ To build index, run
 $   index-build ../src/tests/test.txt
 ```
 
-This command creates the required data structures next to the input as `<file>.index/`, using the filename (without extension) as prefix. For `../src/tests/test.txt` that is `../src/tests/test.txt.index/test.*`, so the index prefix passed to `index-locate` is `../src/tests/test.txt.index/test`.
+This command creates the required data structures next to the input as `<file>.index/`.
 The pattern file should contain one pattern per line. For a single pattern use option -p\<pattern\>.
-To locate all MEMs in relation to pattern
+To locate all MEMs, pass the **same original text file** to `index-locate` (it re-derives the
+index location automatically — do not pass the `.index/` path):
 ```
-$   ./index-locate ../src/tests/test.txt.index/test -P../src/tests/test.pattern
-$   ./index-locate ../src/tests/test.txt.index/test -p<pattern>
+$   ./index-locate ../src/tests/test.txt -P../src/tests/test.pattern
+$   ./index-locate ../src/tests/test.txt -p<pattern>
 ```
 results are printed on the standard output
 
